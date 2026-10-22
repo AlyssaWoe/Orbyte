@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orbyte Smart Payment Follow-up AI - SME Receivables Operations</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+  <!-- ========================================================
+       1. FULL-SCREEN 3D CAMPUS (Occupies Entire Screen by Default)
+       ======================================================== -->
+  <div class="campus-screen-container">
+    <div id="three-canvas"></div>
+
+    <!-- Top-Left Hamburger Menu Button (Three lines ☰) -->
+    <button id="hamburger-btn" class="hamburger-menu-btn" title="Open Navigation Drawer">
+      <div class="hamburger-bar"></div>
+      <div class="hamburger-bar"></div>
+      <div class="hamburger-bar"></div>
+    </button>
+
+    <!-- Top-Right Ambient HUD -->
+    <div class="campus-top-hud">
+      <div class="hud-pill">
+        <div class="hud-dot"></div>
+        <span>🌱 Light Green Daylight Campus</span>
+      </div>
+      <div class="hud-pill">
+        <span>🏢 Apex Logistics SME (ORB-SME-01)</span>
+      </div>
+      <div class="hud-pill" style="border-color:#fecaca; background:#fffaf9;">
+        <span id="hud-overdue-badge" style="color:var(--accent-rose); font-weight:700;">4 Overdue Accounts</span>
+      </div>
+    </div>
+
+    <!-- Bottom Movement Controls Tip -->
+    <div class="campus-bottom-hud">
+      <span>🎮 <strong>Smooth Roaming:</strong> Use <span class="keyboard-key">W</span> <span class="keyboard-key">A</span> <span class="keyboard-key">S</span> <span class="keyboard-key">D</span> or Arrow Keys to walk avatar</span>
+      <span>• Left-click & drag to orbit / Scroll to zoom</span>
+      <span>• Walk up to an agent & press <span class="keyboard-key">E</span> or click them directly to interact</span>
+      <button class="btn btn-secondary btn-sm" onclick="app.scene3d.resetCamera()" style="margin-left:8px;">🔄 Reset Camera</button>
+    </div>
+
+    <!-- Proximity Interaction Toast Prompt -->
+    <div id="proximity-prompt" class="proximity-prompt">
+      💬 Press E or click to interact with Agent
+    </div>
+  </div>
+
+  <!-- ========================================================
+       2. SLIDING DRAWER MENU (Triggered by Hamburger Button)
+       ======================================================== -->
+  <div id="drawer-backdrop" class="drawer-backdrop">
+    <div class="sliding-menu-drawer">
+      <div class="drawer-header">
+        <div class="drawer-brand">
+          <div class="drawer-brand-icon">🌿</div>
+          <div class="drawer-brand-text">
+            <h2>Orbyte AI Operations Console</h2>
+            <p>Autonomous SME Receivables System</p>
+          </div>
+        </div>
+        <button id="drawer-close-btn" class="drawer-close-btn">&times;</button>
+      </div>
+
+      <div class="drawer-nav-list">
+        <div class="drawer-section-title">Primary Fullscreen Views</div>
+        <button class="drawer-nav-item active" data-view="campus">🏡 3D Immersive Campus</button>
+        <button class="drawer-nav-item" data-view="overview">📊 Executive Receivables Overview</button>
+
+        <div class="drawer-section-title">7 Production AI Agents</div>
+        <button class="drawer-nav-item" data-view="agent-1">📥 Agent 1: Ingestion & Validation (Docling + Pydantic)</button>
+        <button class="drawer-nav-item" data-view="agent-2">⏰ Agent 2: Payment Monitoring & Aging (PostgreSQL + Policy)</button>
+        <button class="drawer-nav-item" data-view="agent-3">🎯 Agent 3: Laya Decision & Routing (NAR + Calibrated Threshold)</button>
+        <button class="drawer-nav-item" data-view="agent-4">💬 Agent 4: Reply Understanding & Draft Coordination (DeepSeek)</button>
+        <button class="drawer-nav-item" data-view="agent-5">✉️ Agent 5: Collection Strategy & Follow-up (Policy Draft)</button>
+        <button class="drawer-nav-item" data-view="agent-6">🏦 Agent 6: Payment Reconciliation & Ledger (Bank Feeds)</button>
+        <button class="drawer-nav-item" data-view="orchestrator">🎛️ Agent 7: Workflow Orchestrator & State Machine (LangGraph HITL)</button>
+
+        <div class="drawer-section-title">Methodology & Governance</div>
+        <button class="drawer-nav-item" data-view="methodology">📋 Architecture & 7 Skills Specifications (Methodology)</button>
+        <button class="drawer-nav-item" data-view="approvals">🛡️ Human Approvals & Immutable Audit Trail (HITL & Audit)</button>
+        <button class="drawer-nav-item" data-view="harness">🧪 Harness² Evaluation Lab (Dev Benchmark)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       3. INTERACTIVE AGENT ACTION POPUP (When Approaching Agent)
+       ======================================================== -->
+  <div id="agent-action-popup" class="agent-action-popup">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <span class="popup-agent-badge" style="background:var(--primary);">Production Agent Station</span>
+      <button class="drawer-close-btn" onclick="app.hideAgentActionModal()">&times;</button>
+    </div>
+    <div id="popup-agent-name" class="popup-title">Agent Name</div>
+    <div id="popup-agent-role" class="popup-role">Agent Role Description</div>
+
+    <div class="popup-tasks-title">Operational Capabilities & Responsibilities</div>
+    <div id="popup-tasks-list" class="popup-tasks-list"></div>
+
+    <div class="popup-actions">
+      <button id="popup-cancel-btn" class="btn btn-secondary">Cancel</button>
+      <button id="popup-execute-btn" class="btn btn-primary">Execute Task & Open Dashboard &rarr;</button>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       4. CLIENT DETAIL DRAWER (For Agent 2 Overdue Invoices)
+       ======================================================== -->
+  <div id="client-detail-drawer" class="client-detail-drawer">
+    <div class="drawer-header">
+      <div style="font-weight:700; font-size:16px;">Customer & Overdue Account Dossier</div>
+      <button id="client-drawer-close-btn" class="drawer-close-btn">&times;</button>
+    </div>
+    <div id="client-drawer-content" style="padding:24px; overflow-y:auto; flex:1;"></div>
+  </div>
+
+  <!-- ========================================================
+       5. FULL-SCREEN DEDICATED OVERLAYS (One-click "Back to 3D")
+       ======================================================== -->
+
+  <!-- OVERLAY: Overview -->
+  <div id="overlay-overview" class="dedicated-screen-overlay">
+    <div class="dedicated-topbar">
+      <button class="back-to-campus-btn">⬅️ Back to 3D Campus</button>
+      <div style="font-weight:700; font-size:15px;">📊 Executive Receivables Dashboard</div>
+      <button class="btn btn-primary btn-sm" onclick="app.refreshData()">🔄 Refresh Live Data</button>
+    </div>
+    <div class="dedicated-container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-title">Total Outstanding Balance</div>
+          <div class="stat-value" id="stat-total-receivable">$0.00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Active Open Invoices</div>
+          <div class="stat-value" id="stat-open-invoices">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Overdue Invoices</div>
+          <div class="stat-value" id="stat-overdue-count" style="color:var(--accent-rose);">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Pending Human Approvals</div>
+          <div class="stat-value" id="stat-pending-approvals" style="color:var(--accent-amber);">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📄 Verified Accounts Receivable Ledger</div>
+        <div class="card-subtitle">All invoice states are established by deterministic rules and bank transaction feeds. AI models recommend; ledger controls financial truth.</div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Invoice ID</th>
+                <th>Customer Entity</th>
+                <th>Agreed Due Date</th>
+                <th>Total Value</th>
+                <th>Balance Due</th>
+                <th>Workflow State</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="invoices-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Agent 1 (Docling + Pydantic Extraction) -->
+  <div id="overlay-agent-1" class="dedicated-screen-overlay">
+    <div class="dedicated-topbar">
+      <button class="back-to-campus-btn">⬅️ Back to 3D Campus</button>
+      <div style="font-weight:700; font-size:15px;">📥 Agent 1: Data Ingestion & Validation Console</div>
+      <div><span class="status-pill green">Docling + Pydantic v2</span></div>
+    </div>
+    <div class="dedicated-container">
+      <div class="content-grid-2">
+        <div class="card">
+          <div class="card-title">📄 Invoice Ingestion & Structural Parsing</div>
+          <div class="card-subtitle">Upload or paste invoice text. Docling parses layout and table data; Pydantic v2 strictly validates field schemas and mathematical balancing.</div>
+
+          <div class="form-group">
+            <label class="form-label">Raw Invoice Text Stream (OCR Source):</label>
+            <textarea id="agent1-input-text" class="form-control" style="min-height:160px;">COMMERCIAL INVOICE
+Invoice ID: INV-2026-9042
+Bill To: Meridian Logistics Global
+Email: ap@meridianlogistics.com
+Issue Date: 2026-10-01
+Due Date: 2026-10-31
+Item: Route Dispatch Optimization Software 1 3500.00
+Total Amount: $3,500.00 USD</textarea>
+          </div>
+
+          <button class="btn btn-primary" onclick="app.testAgent1Ingest()">🚀 Execute: Docling Extraction & Pydantic Validation</button>
+          <div id="agent1-status" style="margin-top:12px; font-size:13px; font-weight:600; color:var(--text-secondary);">Ready: Awaiting invoice payload</div>
+
+          <!-- Step-by-step checklist -->
+          <div id="agent1-steps-container"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📋 Validated Invoice Model (Structured Pydantic Output)</div>
+          <div class="card-subtitle">Extracted fields, confidence score, and ledger balancing audit</div>
+          <div id="agent1-extracted-fields">
+            <div style="padding:24px; text-align:center; color:var(--text-muted);">Click the execute button on the left to run live extraction and view the step-by-step checklist.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Agent 2 (Payment Monitoring & Overdue Details) -->
+  <div id="overlay-agent-2" class="dedicated-screen-overlay">
+    <div class="dedicated-topbar">
+      <button class="back-to-campus-btn">⬅️ Back to 3D Campus</button>
+      <div style="font-weight:700; font-size:15px;">⏰ Agent 2: Payment Monitoring & Aging Console</div>
+      <div><span class="status-pill blue">PostgreSQL + Deterministic Rules</span></div>
+    </div>
+    <div class="dedicated-container">
+      <div class="card">
+        <div class="card-title">🔄 PostgreSQL Aging Scan & Quiet Hours Policy</div>
+        <div class="card-subtitle">Regularly checks invoice due dates, enforces recipient quiet hours (09:00 - 18:00), and halts routine follow-ups during disputes or verified payment promises.</div>
+
+        <!-- Step-by-step checklist -->
+        <div id="agent2-steps-container"></div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin:24px 0 16px;">
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-secondary agent2-filter-btn active" data-cat="overdue" onclick="app.filterAgent2Category('overdue')">🔴 Overdue Accounts</button>
+          <button class="btn btn-secondary agent2-filter-btn" data-cat="upcoming" onclick="app.filterAgent2Category('upcoming')">🟡 Upcoming Invoices</button>
+          <button class="btn btn-secondary agent2-filter-btn" data-cat="paid" onclick="app.filterAgent2Category('paid')">🟢 Reconciled & Closed</button>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="app.loadAgent2CategorizedInvoices()">⚡ Scan All Accounts Now</button>
+      </div>
+
+      <div id="agent2-cards-container"></div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Agent 3 (Laya Decision & Routing) -->
+  <div id="overlay-agent-3" class="dedicated-screen-overlay">
+    <div class="dedicated-topbar">
+      <button class="back-to-campus-btn">⬅️ Back to 3D Campus</button>
+      <div style="font-weight:700; font-size:15px;">🎯 Agent 3: Laya Decision & Routing Console</div>
+      <div><span class="status-pill purple">Laya NAR + 0.75 Threshold</span></div>
+    </div>
+    <div class="dedicated-container">
+      <div class="content-grid-2">
+        <div class="card">
+          <div class="card-title">🎯 Non-Autoregressive Event Scoring</div>
+          <div class="card-subtitle">Scores inbound communications across 6 predefined candidate labels. Evaluates against calibrated threshold (0.75) or routes to safe human fallback.</div>
+
+          <div class="form-group">
+            <label class="form-label">Customer Inbound Event / Message:</label>
+            <textarea id="agent3-input-text" class="form-control" style="min-height:100px;">We received invoice INV-2026-0891 and we promise to wire the full amount next Monday.</textarea>
+          </div>
+
+          <div style="display:flex; gap:8px; margin-bottom:14px;">
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('agent3-input-text').value='We already sent the payment wire yesterday with reference TXN-9981.'">Test: Already Paid Claim</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('agent3-input-text').value='We dispute this invoice. You billed for 20 extra hours we never authorized.'">Test: Billing Dispute</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('agent3-input-text').value='hello noted ok'">Test: Ambiguous / Fallback</button>
+          </div>
+
+          <button class="btn btn-primary" onclick="app.testAgent3Laya()">🎯 Execute: Laya Scoring & Route Determination</button>
+          <div id="agent3-steps-container"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📊 Probability Distribution & Calibration Metrics</div>
+          <div class="card-subtitle">Non-autoregressive scoring breakdown across all candidate categories</div>
+          <pre id="agent3-output" class="code-block">// Laya classification scores will appear here...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Agent 4 & 5 (Customer Conversations + AI Summary + Agent 5 Draft) -->
+  <div id="overlay-agent-4" class="dedicated-screen-overlay">
+    <div class="dedicated-topbar">
+      <button class="back-to-campus-btn">⬅️ Back to 3D Campus</button>
+      <div style="font-weight:700; font-size:15px;">💬 Agent 4: Customer Reply NLU + Agent 5 Follow-up Drafting</div>
+      <div><span class="status-pill blue">DeepSeek NLU + Policy Engine</span></div>
+    </div>
+    <div class="dedicated-container">
+      <div class="conversation-layout">
+        <!-- Left: Customer Conversation Threads -->
+        <div class="card" style="padding:16px;">
+          <div class="card-title" style="font-size:14px; margin-bottom:12px;">👥 Customer Conversation Threads</div>
+          <div id="conv-thread-list" class="conv-thread-list"></div>
+        </div>
+
+        <!-- Right: Transcript + AI Summary + Agent 5 Draft -->
+        <div class="conv-chat-viewer">
+          <!-- Chat Transcript -->
+          <div class="chat-bubble-box">
+            <div style="font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:8px;">Communication Transcript History</div>
+            <div id="chat-bubbles-container"></div>
+          </div>
+
+          <!-- Section A: Agent 4 AI Summary -->
+          <div class="ai-summary-box">
+            <div class="card-title" style="color:#15803d; margin-bottom:8px;">🧠 Agent 4: AI Fact Extraction & Intent Summary (DeepSeek)</div>
+            <div id="agent4-ai-summary-content">
+              <p>Select a customer conversation on the left. AI will analyze intent and draft a reply.</p>
+            </div>
+          </div>
+
+          <!-- Section B: Agent 5 Tailored Draft -->
+          <div class="agent5-draft-box">
+            <div class="card-title" style="color:#0369a1; margin-bottom:8px;">✉️ Agent 5: Tailored Reply Draft (Collection Strategy)</div>
+            <div id="agent5-ai-draft-content">
+              <p>Waiting for Agent 4 intent extraction to formulate tailored response draft.</p>
+            </div>
+          </div>
+
+          <!-- Step-by-step checklist -->
+          <div id="conv-steps-container"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Agent 5 Standalone -->
+  <div id="overlay-agent-5" class="dedicated-screen-overlay">
+    <div class="dedicated-topbar">
+      <button class="back-to-campus-btn">⬅️ Back to 3D Campus</button>
+      <div style="font-weight:700; font-size:15px;">✉️ Agent 5: Collection Strategy & Follow-up Console</div>
+      <div><span class="status-pill green">Policy Rules + HITL</span></div>
+    </div>
+    <div class="dedicated-container">
+      <div class="content-grid-2">
+        <div class="card">
+          <div class="card-title">✍️ Follow-up Draft Formulation</div>
+          <div class="card-subtitle">Automatically selects tone based on aging brackets. High balances (> $5,000) or severe aging require supervisor approval.</div>
+
+          <div class="form-group">
+            <label class="form-label">Select Target Account:</label>
+            <select id="agent5-inv-select" class="form-control">
+              <option value="INV-2026-0891">[INV-2026-0891] Apex Logistics - $4,850.00</option>
+              <option value="INV-2026-0892">[INV-2026-0892] BioTech Solutions - $12,400.00</option>
+              <option value="INV-2026-0895">[INV-2026-0895] Epsilon Cloud Systems - $4,500.00</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Dispatch Channel:</label>
+            <select id="agent5-channel-select" class="form-control">
+              <option value="Email">Email (Formal Accounts Payable)</option>
+              <option value="WhatsApp">WhatsApp (Direct Operations Contact)</option>
+            </select>
+          </div>
+
+          <button class="btn btn-primary" onclick="app.testAgent5Strategy()">✍️ Execute: Draft Strategy & Policy Checks</button>
+          <div id="agent5-steps-container"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📑 Draft Message & Pre-Action Validation</div>
+          <pre id="agent5-output" class="code-block">// Strategy output and policy checks will appear here...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Agent 6 (Payment Reconciliation & Clear Ledger) -->
+  <div id="overlay-agent-6" class="dedicated-screen-overlay">
+    <div class="dedicated-topbar">
+      <button class="back-to-campus-btn">⬅️ Back to 3D Campus</button>
+      <div style="font-weight:700; font-size:15px;">🏦 Agent 6: Payment Reconciliation & Ledger Records Console</div>
+      <div><span class="status-pill amber">Deterministic Multi-Tier Matching</span></div>
+    </div>
+    <div class="dedicated-container">
+      <div class="card">
+        <div class="card-title">🏦 Bank Transaction Records & Reconciliation Ledger (Explicit Records)</div>
+        <div class="card-subtitle">Every bank deposit, reference note, and matched open invoice are clearly listed without ambiguity.</div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Transaction ID</th>
+                <th>Value Date</th>
+                <th>Sender / Payer Entity</th>
+                <th>Settlement Amount</th>
+                <th>Bank Reference Memo</th>
+                <th>Match Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="agent6-txns-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="content-grid-2">
+        <div class="card">
+          <div class="card-title">💰 Simulate / Ingest New Bank Deposit</div>
+          <div class="card-subtitle">Enter an incoming wire transfer to test Agent 6's multi-tier deterministic matching engine.</div>
+
+          <div class="form-group">
+            <label class="form-label">Bank Reference Note (Memo):</label>
+            <input type="text" id="agent6-ref-input" class="form-control" value="WIRE SETTLEMENT INV-2026-0891">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deposit Amount ($):</label>
+            <input type="number" id="agent6-amt-input" class="form-control" value="4850.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Payer Account Entity Name:</label>
+            <input type="text" id="agent6-sender-input" class="form-control" value="Apex Logistics Corp">
+          </div>
+
+          <button class="btn btn-primary" onclick="app.testAgent6Reconcile()">💰 Execute: Deterministic Bank Reconciliation</button>
+          <div id="agent6-steps-container"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔍 Reconciliation Match Evidence & Ledger Update</div>
+          <pre id="agent6-output" class="code-block">// Match evidence and status will appear here...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Orchestrator (Agent 7) -->
+  <div id="overlay-orchestrator" class="dedicated-screen-overlay">
+    <div class="dedicated-topbar">
+      <button class="back-to-campus-btn">⬅️ Back to 3D Campus</button>
+      <div style="font-weight:700; font-size:15px;">🎛️ Agent 7: LangGraph State Machine Orchestrator</div>
+      <div><span class="status-pill purple">Durable Workflow</span></div>
+    </div>
+    <div class="dedicated-container">
+      <div class="content-grid-2">
+        <div class="card">
+          <div class="card-title">▶️ Pipeline Execution Controller</div>
+          <div class="form-group">
+            <label class="form-label">Select Target Invoice:</label>
+            <select id="wf-inv-select" class="form-control">
+              <option value="INV-2026-0891">INV-2026-0891 (Apex Logistics)</option>
+              <option value="INV-2026-0895">INV-2026-0895 (Epsilon Cloud - Pending Approval)</option>
+              <option value="INV-2026-0893">INV-2026-0893 (Cascade Digital - Disputed Hold)</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="app.testOrchestratorRun()">🚀 Execute Full Pipeline Step</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📊 Execution Trace & Pipeline Log</div>
+          <pre id="wf-output" class="code-block">// Pipeline execution trace will appear here...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Methodology -->
+  <div id="overlay-methodology" class="dedicated-screen-overlay">
+    <div class="dedicated-topbar">
+      <button class="back-to-campus-btn">⬅️ Back to 3D Campus</button>
+      <div style="font-weight:700; font-size:15px;">📋 Architecture Design & 7 Production Skill Specifications</div>
+      <div><span class="status-pill green">Official Specs</span></div>
+    </div>
+    <div class="dedicated-container">
+      <div class="card">
+        <div class="card-title">🛡️ Core Financial Safety Principle (Non-Negotiable)</div>
+        <p style="font-size:14px; line-height:1.8; color:var(--text-primary);">
+          <strong>"Models recommend or interpret; verified records and deterministic code establish financial truth and control side effects."</strong><br>
+          A model must never independently mark an invoice paid, change an account balance, bypass permissions, or execute an unauthorized financial action.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📜 Verified Project Skills Catalog (`skills/*/SKILL.md`)</div>
+        <div class="form-group" style="max-width:400px; margin-bottom:16px;">
+          <label class="form-label">Select Production Skill to Inspect Specification:</label>
+          <select id="skill-selector" class="form-control"></select>
+        </div>
+        <div id="skill-content-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Approvals & Audit -->
+  <div id="overlay-approvals" class="dedicated-screen-overlay">
+    <div class="dedicated-topbar">
+      <button class="back-to-campus-btn">⬅️ Back to 3D Campus</button>
+      <div style="font-weight:700; font-size:15px;">🛡️ Human-In-The-Loop Approvals & Immutable Audit Trail</div>
+      <div><span class="status-pill amber">Immutable Audit</span></div>
+    </div>
+    <div class="dedicated-container">
+      <div class="card">
+        <div class="card-title">⚠️ Pending Human Approval Tasks</div>
+        <div class="card-subtitle">Actions paused by policy checks requiring supervisor sign-off before transmission.</div>
+        <div id="approvals-container"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📜 Immutable Cryptographic Audit Log Trail</div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Actor / Agent</th>
+                <th>Action</th>
+                <th>State Transition</th>
+                <th>Decision Summary</th>
+                <th>Idempotency Key</th>
+              </tr>
+            </thead>
+            <tbody id="audit-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: Harness Lab -->
+  <div id="overlay-harness" class="dedicated-screen-overlay">
+    <div class="dedicated-topbar">
+      <button class="back-to-campus-btn">⬅️ Back to 3D Campus</button>
+      <div style="font-weight:700; font-size:15px;">🧪 Harness² Evaluation Lab</div>
+      <div><span class="status-pill blue">Development-Time Optimizer</span></div>
+    </div>
+    <div class="dedicated-container">
+      <div class="card">
+        <div class="card-title">🔬 Development Evaluation Runs & Benchmarks</div>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">
+          Harness² is utilized during development and controlled testing to evaluate agent instructions, prompt-injection defenses, and Laya confidence thresholds against privacy-safe test suites. It is <strong>not</strong> a production payment agent.
+        </p>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Run ID</th>
+                <th>Timestamp</th>
+                <th>Target Component</th>
+                <th>Test Size</th>
+                <th>Accuracy</th>
+                <th>Schema Validity</th>
+                <th>Latency</th>
+                <th>Recommendation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong style="color:var(--primary)">HARNESS-RUN-042</strong></td>
+                <td>2026-10-20 14:30</td>
+                <td>Agent 3: Laya Confidence Calibrator</td>
+                <td>250 cases</td>
+                <td><span class="status-pill green">97.6%</span></td>
+                <td>100%</td>
+                <td>38 ms</td>
+                <td>Calibrated decision threshold accepted at 0.75 for automated routing.</td>
+              </tr>
+              <tr>
+                <td><strong style="color:var(--primary)">HARNESS-RUN-043</strong></td>
+                <td>2026-10-22 09:15</td>
+                <td>Agent 4: Prompt Injection Guard</td>
+                <td>180 cases</td>
+                <td><span class="status-pill green">99.4%</span></td>
+                <td>99.8%</td>
+                <td>110 ms</td>
+                <td>Adversarial payload filtering validated. Untrusted text cannot alter ledger.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic Scripts -->
+  <script src="js/office3d.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
