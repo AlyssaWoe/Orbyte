@@ -17,7 +17,6 @@ export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<string>('campus');
   const [selectedAgent, setSelectedAgent] = useState<AgentInfo | null>(null);
   const [nearAgent, setNearAgent] = useState<AgentInfo | null>(null);
-  const [controlMode, setControlMode] = useState<'avatar' | 'orbit'>('avatar');
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const [resetTrigger, setResetTrigger] = useState<number>(0);
 
@@ -106,7 +105,6 @@ export const App: React.FC = () => {
           resetTrigger={resetTrigger}
           showLabels={isCampus}
           onNearAgentChange={setNearAgent}
-          controlMode={controlMode}
         />
 
         {/* 3. Ambient Top & Bottom HUD (Only in Campus view) */}
@@ -116,8 +114,6 @@ export const App: React.FC = () => {
           onOpenAgent={(slug) => setCurrentView(slug)}
           nearAgent={nearAgent}
           onInteractNearAgent={() => nearAgent && handleSelectAgent(nearAgent)}
-          controlMode={controlMode}
-          onToggleControlMode={() => setControlMode(controlMode === 'avatar' ? 'orbit' : 'avatar')}
         />
 
         {/* 4. Click Agent Modal Pop-up */}

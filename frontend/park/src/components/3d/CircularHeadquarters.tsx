@@ -10,13 +10,13 @@ interface CircularHQProps {
 }
 
 export const CircularHeadquarters: React.FC<CircularHQProps> = ({
-  outerRadius = 26,
-  innerRadius = 18,
-  height = 5.2,
+  outerRadius = 48,
+  innerRadius = 36,
+  height = 5.6,
   floors = 4
 }) => {
   const floorHeight = height / floors;
-  const segments = 64;
+  const segments = 96;
   const midRadius = (outerRadius + innerRadius) / 2;
 
   return (
@@ -38,8 +38,8 @@ export const CircularHeadquarters: React.FC<CircularHQProps> = ({
             <mesh rotation={[-Math.PI / 2, 0, 0]} castShadow receiveShadow>
               <ringGeometry
                 args={[
-                  innerRadius - 0.3, // slight overhang inside
-                  outerRadius + 0.6, // iconic Apple Park white cantilever canopy outside
+                  innerRadius - 0.4,
+                  outerRadius + 0.8,
                   segments
                 ]}
               />
@@ -54,14 +54,14 @@ export const CircularHeadquarters: React.FC<CircularHQProps> = ({
             {/* Edge trim cylinder for outer canopy */}
             <mesh position={[0, 0.05, 0]}>
               <cylinderGeometry
-                args={[outerRadius + 0.6, outerRadius + 0.6, 0.12, segments, 1, true]}
+                args={[outerRadius + 0.8, outerRadius + 0.8, 0.14, segments, 1, true]}
               />
               <meshStandardMaterial color="#ffffff" roughness={0.2} />
             </mesh>
             {/* Edge trim cylinder for inner canopy */}
             <mesh position={[0, 0.05, 0]}>
               <cylinderGeometry
-                args={[innerRadius - 0.3, innerRadius - 0.3, 0.12, segments, 1, true]}
+                args={[innerRadius - 0.4, innerRadius - 0.4, 0.14, segments, 1, true]}
               />
               <meshStandardMaterial color="#ffffff" roughness={0.2} />
             </mesh>
@@ -69,25 +69,25 @@ export const CircularHeadquarters: React.FC<CircularHQProps> = ({
         );
       })}
 
-      {/* 4. Solar Panels & Green Roof on top ring */}
+      {/* 4. Solar Panels on top of the giant ring */}
       <mesh
         position={[0, height + 0.02, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
         <ringGeometry
-          args={[innerRadius + 1.2, outerRadius - 1.2, segments]}
+          args={[innerRadius + 1.5, outerRadius - 1.5, segments]}
         />
         <meshStandardMaterial
-          color="#334155" // Dark sleek solar arrays
+          color="#334155"
           roughness={0.35}
           metalness={0.8}
         />
       </mesh>
 
-      {/* 5. Interior Columns & Floor Decks visible through glass */}
-      {Array.from({ length: 16 }).map((_, colIdx) => {
-        const angle = (colIdx / 16) * Math.PI * 2;
+      {/* 5. Interior Columns visible through glass */}
+      {Array.from({ length: 28 }).map((_, colIdx) => {
+        const angle = (colIdx / 28) * Math.PI * 2;
         const x = Math.cos(angle) * midRadius;
         const z = Math.sin(angle) * midRadius;
         return (
@@ -96,34 +96,32 @@ export const CircularHeadquarters: React.FC<CircularHQProps> = ({
             position={[x, height / 2, z]}
             castShadow
           >
-            <cylinderGeometry args={[0.22, 0.22, height, 12]} />
+            <cylinderGeometry args={[0.3, 0.3, height, 12]} />
             <meshStandardMaterial color="#f1f5f9" roughness={0.3} />
           </mesh>
         );
       })}
 
-      {/* Interior warm ambient glow lights for office workstations */}
-      {Array.from({ length: 8 }).map((_, lightIdx) => {
-        const angle = (lightIdx / 8) * Math.PI * 2;
+      {/* Interior warm lighting */}
+      {Array.from({ length: 14 }).map((_, lightIdx) => {
+        const angle = (lightIdx / 14) * Math.PI * 2;
         const x = Math.cos(angle) * midRadius;
         const z = Math.sin(angle) * midRadius;
         return (
           <pointLight
             key={lightIdx}
             position={[x, height * 0.6, z]}
-            intensity={0.25}
-            distance={8}
+            intensity={0.35}
+            distance={14}
             color="#fef08a"
           />
         );
       })}
 
-      {/* 6. Smaller Ancillary Campus Buildings (e.g. Steve Jobs Theater style glass pavilion & fitness center) */}
-      {/* South-West Glass Pavilion */}
-      <group position={[-36, 0, -18]}>
-        {/* Circular glass cylinder pavilion */}
-        <mesh position={[0, 1.6, 0]} castShadow>
-          <cylinderGeometry args={[4.5, 4.5, 3.2, 32]} />
+      {/* 6. Steve Jobs Theater style glass pavilion outside the ring (West) */}
+      <group position={[-58, 0, -22]}>
+        <mesh position={[0, 1.8, 0]} castShadow>
+          <cylinderGeometry args={[5.5, 5.5, 3.6, 32]} />
           <meshPhysicalMaterial
             color="#cffafe"
             transparent
@@ -132,37 +130,13 @@ export const CircularHeadquarters: React.FC<CircularHQProps> = ({
             transmission={0.85}
           />
         </mesh>
-        {/* Carbon fiber style flat circular roof */}
-        <mesh position={[0, 3.25, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[5.2, 5.2, 0.2, 32]} />
+        <mesh position={[0, 3.65, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[6.2, 6.2, 0.25, 32]} />
           <meshStandardMaterial color="#1e293b" roughness={0.2} metalness={0.3} />
         </mesh>
-        {/* White base ring */}
         <mesh position={[0, 0.08, 0]} receiveShadow>
-          <cylinderGeometry args={[5.4, 5.4, 0.16, 32]} />
+          <cylinderGeometry args={[6.4, 6.4, 0.16, 32]} />
           <meshStandardMaterial color="#f8fafc" roughness={0.3} />
-        </mesh>
-      </group>
-
-      {/* North-East R&D Building */}
-      <group position={[38, 0, -14]}>
-        <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
-          <boxGeometry args={[9, 3.6, 6]} />
-          <meshStandardMaterial color="#ffffff" roughness={0.25} />
-        </mesh>
-        {/* Modern ribbon glass strip */}
-        <mesh position={[0, 1.8, 3.02]}>
-          <planeGeometry args={[8.4, 1.8]} />
-          <meshPhysicalMaterial
-            color="#38bdf8"
-            transparent
-            opacity={0.6}
-            roughness={0.1}
-          />
-        </mesh>
-        <mesh position={[0, 3.65, 0]}>
-          <boxGeometry args={[9.4, 0.2, 6.4]} />
-          <meshStandardMaterial color="#cbd5e1" roughness={0.3} />
         </mesh>
       </group>
     </group>

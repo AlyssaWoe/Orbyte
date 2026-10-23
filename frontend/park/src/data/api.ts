@@ -11,7 +11,7 @@ export interface AgentInfo {
   status: 'Ready' | 'Active' | 'Processing';
   color: string;
   accentColor: string;
-  position: [number, number, number]; // 3D coordinates in Apple Park
+  position: [number, number, number]; // 3D coordinates inside the giant Apple Park Ring
   rotationY: number;
   description: string;
   responsibilities: string[];
@@ -28,7 +28,7 @@ export const DEPARTMENTS: AgentInfo[] = [
     status: 'Ready',
     color: '#16a34a',
     accentColor: '#bbf7d0',
-    position: [0, 0, 36], // Front entrance plaza
+    position: [0, 0, 26], // South side inside giant circle
     rotationY: Math.PI,
     description: 'Autonomous document extraction, layout parsing, and mathematical ledger consistency verification.',
     responsibilities: [
@@ -48,8 +48,8 @@ export const DEPARTMENTS: AgentInfo[] = [
     status: 'Active',
     color: '#0d9488',
     accentColor: '#99f6e4',
-    position: [34, 0, 16], // East courtyard wing
-    rotationY: -Math.PI / 3,
+    position: [24, 0, 12], // South-East inside giant circle
+    rotationY: -Math.PI * 0.7,
     description: 'PostgreSQL-backed real-time invoice surveillance, quiet-hours compliance, and aging categorization.',
     responsibilities: [
       'Surveil active account due dates against UTC clock',
@@ -68,8 +68,8 @@ export const DEPARTMENTS: AgentInfo[] = [
     status: 'Ready',
     color: '#7c3aed',
     accentColor: '#ddd6fe',
-    position: [28, 0, -26], // Northeast park grove
-    rotationY: -Math.PI * 0.7,
+    position: [24, 0, -12], // North-East inside giant circle
+    rotationY: -Math.PI * 0.3,
     description: 'Sub-15ms non-autoregressive event scoring across 6 operational categories with calibrated 0.75 threshold.',
     responsibilities: [
       'Score inbound messages across 6 payment event categories',
@@ -88,7 +88,7 @@ export const DEPARTMENTS: AgentInfo[] = [
     status: 'Ready',
     color: '#0284c7',
     accentColor: '#bae6fd',
-    position: [0, 0, -38], // North inner courtyard
+    position: [0, 0, -26], // North side inside giant circle
     rotationY: 0,
     description: 'Natural language understanding for complex customer replies, payment promises, and invoice disputes.',
     responsibilities: [
@@ -108,8 +108,8 @@ export const DEPARTMENTS: AgentInfo[] = [
     status: 'Active',
     color: '#15803d',
     accentColor: '#86efac',
-    position: [-28, 0, -26], // Northwest courtyard wing
-    rotationY: Math.PI * 0.7,
+    position: [-24, 0, -12], // North-West inside giant circle
+    rotationY: Math.PI * 0.3,
     description: 'Deterministic collection policy engine that generates respectful, legally compliant recovery messages.',
     responsibilities: [
       'Synthesize contextual follow-up emails, SMS, and WhatsApp drafts',
@@ -128,8 +128,8 @@ export const DEPARTMENTS: AgentInfo[] = [
     status: 'Ready',
     color: '#b45309',
     accentColor: '#fde68a',
-    position: [-34, 0, 16], // West campus pavilion
-    rotationY: Math.PI / 3,
+    position: [-24, 0, 12], // South-West inside giant circle
+    rotationY: Math.PI * 0.7,
     description: 'Automated 3-way matching between bank deposit feeds, customer payment claims, and open receivables.',
     responsibilities: [
       'Process live bank statement feeds and wire transaction IDs',
@@ -148,7 +148,7 @@ export const DEPARTMENTS: AgentInfo[] = [
     status: 'Active',
     color: '#c2410c',
     accentColor: '#fed7aa',
-    position: [0, 0, 0], // Center of Apple Park Ring!
+    position: [0, 0, 0], // Center of giant Apple Park Circle
     rotationY: 0,
     description: 'Central governor enforcing state machine invariants, human approval gates, and cryptographically linked audit logs.',
     responsibilities: [

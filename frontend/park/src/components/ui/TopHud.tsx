@@ -7,8 +7,6 @@ interface TopHudProps {
   onOpenAgent: (slug: string) => void;
   nearAgent: AgentInfo | null;
   onInteractNearAgent: () => void;
-  controlMode: 'avatar' | 'orbit';
-  onToggleControlMode: () => void;
 }
 
 export const TopHud: React.FC<TopHudProps> = ({
@@ -16,9 +14,7 @@ export const TopHud: React.FC<TopHudProps> = ({
   onResetCamera,
   onOpenAgent,
   nearAgent,
-  onInteractNearAgent,
-  controlMode,
-  onToggleControlMode
+  onInteractNearAgent
 }) => {
   return (
     <>
@@ -85,35 +81,15 @@ export const TopHud: React.FC<TopHudProps> = ({
               }}
             />
             <span style={{ fontWeight: 700, fontSize: '14px', color: '#0f172a' }}>
-              Orbyte AI • Apple Park Campus
+              Orbyte AI • Giant Apple Park Ring
             </span>
             <span style={{ color: '#94a3b8' }}>|</span>
-            <span style={{ fontSize: '13px', color: '#475569' }}>Apex Logistics SME</span>
+            <span style={{ fontSize: '13px', color: '#475569' }}>All 7 Agents Inside Ring</span>
           </div>
         </div>
 
-        {/* Right: Mode Toggle & Alerts */}
+        {/* Right: Quick Alert Pills */}
         <div style={{ display: 'flex', gap: '10px', pointerEvents: 'auto', alignItems: 'center' }}>
-          <button
-            onClick={onToggleControlMode}
-            style={{
-              background: controlMode === 'avatar' ? '#f0fdf4' : '#ffffff',
-              border: `1px solid ${controlMode === 'avatar' ? '#86efac' : '#cbd5e1'}`,
-              color: controlMode === 'avatar' ? '#15803d' : '#334155',
-              padding: '8px 16px',
-              borderRadius: '24px',
-              fontWeight: 700,
-              fontSize: '13px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            {controlMode === 'avatar' ? '🎮 Avatar Walk Mode' : '🛰️ Orbit Camera Mode'}
-          </button>
-
           <button
             onClick={() => onOpenAgent('agent-2')}
             style={{
@@ -133,6 +109,26 @@ export const TopHud: React.FC<TopHudProps> = ({
           >
             <span>⚠️</span> 4 Overdue Invoices
           </button>
+
+          <button
+            onClick={() => onOpenAgent('agent-1')}
+            style={{
+              background: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              color: '#15803d',
+              padding: '8px 16px',
+              borderRadius: '24px',
+              fontWeight: 600,
+              fontSize: '13px',
+              boxShadow: '0 4px 12px rgba(21, 128, 61, 0.08)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>📄</span> Upload Bill
+          </button>
         </div>
       </div>
 
@@ -142,7 +138,7 @@ export const TopHud: React.FC<TopHudProps> = ({
           onClick={onInteractNearAgent}
           style={{
             position: 'absolute',
-            bottom: '80px',
+            bottom: '76px',
             left: '50%',
             transform: 'translateX(-50%)',
             background: 'rgba(15, 23, 42, 0.94)',
@@ -168,7 +164,7 @@ export const TopHud: React.FC<TopHudProps> = ({
         </div>
       )}
 
-      {/* Bottom Floating Movement Controls Tip */}
+      {/* Bottom Floating Movement Controls Tip (Fixed Overview, Zero Dizziness) */}
       <div
         style={{
           position: 'absolute',
@@ -190,15 +186,11 @@ export const TopHud: React.FC<TopHudProps> = ({
         }}
       >
         <span>
-          🎮 <strong>Avatar Controls:</strong> Use <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>W</kbd> <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>A</kbd> <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>S</kbd> <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>D</kbd> or Arrows to walk
+          🎮 <strong>Roam Avatar:</strong> Use <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>W</kbd> <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>A</kbd> <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>S</kbd> <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>D</kbd> or Arrow Keys to walk inside circle
         </span>
         <span style={{ color: '#cbd5e1' }}>•</span>
         <span>
-          Hold <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>Shift</kbd> to sprint
-        </span>
-        <span style={{ color: '#cbd5e1' }}>•</span>
-        <span>
-          Press <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>E</kbd> near agent to interact
+          Press <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>E</kbd> near agent or click directly
         </span>
         <button
           onClick={onResetCamera}
@@ -213,7 +205,7 @@ export const TopHud: React.FC<TopHudProps> = ({
             cursor: 'pointer'
           }}
         >
-          🔄 Reset Position
+          🔄 Steady Overview
         </button>
       </div>
     </>

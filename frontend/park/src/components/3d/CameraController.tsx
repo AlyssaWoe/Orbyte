@@ -11,18 +11,18 @@ export const CameraController: React.FC<CameraControllerProps> = ({ resetTrigger
   const { camera } = useThree();
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
-  // Set default initial view: high isometric angle showcasing the Apple Park ring and grounds
+  // Set steady, high bird's-eye overview framing the entire giant Apple Park ring
   useEffect(() => {
-    camera.position.set(0, 38, 54);
+    camera.position.set(0, 72, 68);
     camera.lookAt(0, 0, 0);
   }, [camera]);
 
-  // Handle reset camera smoothly
+  // Reset camera smoothly to the steady overview
   useEffect(() => {
     if (resetTrigger > 0 && controlsRef.current) {
       const controls = controlsRef.current;
       controls.reset();
-      camera.position.set(0, 38, 54);
+      camera.position.set(0, 72, 68);
       controls.target.set(0, 0, 0);
       controls.update();
     }
@@ -32,12 +32,13 @@ export const CameraController: React.FC<CameraControllerProps> = ({ resetTrigger
     <OrbitControls
       ref={controlsRef}
       enableDamping
-      dampingFactor={0.06}
-      minDistance={10}
-      maxDistance={135}
-      minPolarAngle={Math.PI * 0.05} // High bird's eye
-      maxPolarAngle={Math.PI * 0.46} // Prevent dipping beneath ground
+      dampingFactor={0.08}
+      minDistance={20}
+      maxDistance={160}
+      minPolarAngle={Math.PI * 0.1}
+      maxPolarAngle={Math.PI * 0.45}
       target={[0, 0, 0]}
+      autoRotate={false}
     />
   );
 };

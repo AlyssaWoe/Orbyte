@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { AgentInfo, DEPARTMENTS } from '../../data/api';
 
@@ -14,7 +14,6 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   onInteractAgent,
   resetTrigger
 }) => {
-  const { camera } = useThree();
   const playerGroupRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Mesh>(null);
   const leftArmRef = useRef<THREE.Group>(null);
@@ -22,10 +21,10 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
 
-  // Position and movement state
-  const posRef = useRef(new THREE.Vector3(0, 0, 42)); // Start at South entrance plaza facing the Ring
+  // Position and movement state (Starts inside the giant circle courtyard at [0, 0, 16])
+  const posRef = useRef(new THREE.Vector3(0, 0, 16));
   const velocityRef = useRef(new THREE.Vector3(0, 0, 0));
-  const rotationYRef = useRef(Math.PI); // Facing Ring (North)
+  const rotationYRef = useRef(0);
   const isMovingRef = useRef(false);
   const walkCycleRef = useRef(0);
 
@@ -36,10 +35,10 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       keys.current[e.code] = true;
       if (e.code === 'KeyE') {
-        // Check proximity interact
+        // Proximity interact
         DEPARTMENTS.forEach((dept) => {
           const agentPos = new THREE.Vector3(...dept.position);
-          if (posRef.current.distanceTo(agentPos) < 5.0) {
+          if (posRef.current.distanceTo(agentPos) < 5.5) {
             onInteractAgent(dept);
           }
         });
@@ -60,60 +59,47 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   // Reset position
   useEffect(() => {
     if (resetTrigger > 0 && playerGroupRef.current) {
-      posRef.current.set(0, 0, 42);
-      rotationYRef.current = Math.PI;
+      posRef.current.set(0, 0, 16);
+      rotationYRef.current = 0;
       velocityRef.current.set(0, 0, 0);
-      playerGroupRef.current.position.set(0, 0, 42);
-      playerGroupRef.current.rotation.y = Math.PI;
+      playerGroupRef.current.position.set(0, 0, 16);
+      playerGroupRef.current.rotation.y = 0;
     }
   }, [resetTrigger]);
 
   useFrame((_, delta) => {
     const k = keys.current;
-    const forward = k['KeyW'] || k['ArrowUp'] ? 1 : k['KeyS'] || k['ArrowDown'] ? -1 : 0;
-    const strafe = k['KeyD'] || k['ArrowRight'] ? 1 : k['KeyA'] || k['ArrowLeft'] ? -1 : 0;
+    // World space directional inputs (Fixed top-down / isometric orientation - NO CAMERA SPIN!)
+    const forward = k['KeyW'] || k['ArrowUp'] ? -1 : k['KeyS'] || k['ArrowDown'] ? 1 : 0; // W moves up (-Z), S moves down (+Z)
+    const horizontal = k['KeyD'] || k['ArrowRight'] ? 1 : k['KeyA'] || k['ArrowLeft'] ? -1 : 0; // D moves right (+X), A moves left (-X)
     const isSprint = k['ShiftLeft'] || k['ShiftRight'];
 
-    const speed = isSprint ? 12.0 : 7.0;
-    const moveDir = new THREE.Vector3();
+    const speed = isSprint ? 14.0 : 8.5;
+    const moveDir = new THREE.Vector3(horizontal, 0, forward);
 
-    // Camera relative directions
-    const camForward = new THREE.Vector3();
-    camera.getWorldDirection(camForward);
-    camForward.y = 0;
-    camForward.normalize();
-
-    const camRight = new THREE.Vector3();
-    camRight.crossVectors(camForward, new THREE.Vector3(0, 1, 0)).normalize();
-
-    if (forward !== 0 || strafe !== 0) {
-      moveDir.addScaledVector(camForward, forward);
-      moveDir.addScaledVector(camRight, strafe);
-      if (moveDir.lengthSq() > 0) {
-        moveDir.normalize();
-        isMovingRef.current = true;
-        // Smoothly rotate towards movement vector
-        const targetRot = Math.atan2(moveDir.x, moveDir.z);
-        // Shortest angle rotation lerp
-        let diff = targetRot - rotationYRef.current;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        rotationYRef.current += diff * Math.min(delta * 14, 1.0);
-      }
+    if (moveDir.lengthSq() > 0) {
+      moveDir.normalize();
+      isMovingRef.current = true;
+      // Smoothly rotate avatar towards movement vector
+      const targetRot = Math.atan2(moveDir.x, moveDir.z);
+      let diff = targetRot - rotationYRef.current;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      rotationYRef.current += diff * Math.min(delta * 14, 1.0);
     } else {
       isMovingRef.current = false;
     }
 
-    // Velocity update with acceleration/damping
-    velocityRef.current.lerp(moveDir.multiplyScalar(speed), delta * 12);
+    // Velocity update with acceleration & damping
+    velocityRef.current.lerp(moveDir.multiplyScalar(speed), delta * 14);
     posRef.current.addScaledVector(velocityRef.current, delta);
 
-    // Keep within campus bounds (max radius 75)
-    if (posRef.current.length() > 74) {
-      posRef.current.setLength(74);
+    // Keep player within the giant circle boundary (inner radius 36m)
+    if (posRef.current.length() > 34) {
+      posRef.current.setLength(34);
     }
 
-    // Apply to mesh
+    // Apply position & rotation to player mesh
     if (playerGroupRef.current) {
       playerGroupRef.current.position.copy(posRef.current);
       playerGroupRef.current.rotation.y = rotationYRef.current;
@@ -121,33 +107,23 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
 
     // Walking animation for limbs
     if (isMovingRef.current) {
-      walkCycleRef.current += delta * (isSprint ? 16 : 10);
-      const angle = Math.sin(walkCycleRef.current) * 0.65;
+      walkCycleRef.current += delta * (isSprint ? 18 : 12);
+      const angle = Math.sin(walkCycleRef.current) * 0.7;
 
       if (leftArmRef.current) leftArmRef.current.rotation.x = -angle;
       if (rightArmRef.current) rightArmRef.current.rotation.x = angle;
       if (leftLegRef.current) leftLegRef.current.rotation.x = angle;
       if (rightLegRef.current) rightLegRef.current.rotation.x = -angle;
     } else {
-      // Return to idle stance smoothly
       if (leftArmRef.current) leftArmRef.current.rotation.x *= 0.8;
       if (rightArmRef.current) rightArmRef.current.rotation.x *= 0.8;
       if (leftLegRef.current) leftLegRef.current.rotation.x *= 0.8;
       if (rightLegRef.current) rightLegRef.current.rotation.x *= 0.8;
     }
 
-    // Camera follow player position smoothly
-    const cameraTarget = posRef.current.clone().add(new THREE.Vector3(0, 1.4, 0));
-    // Smoothly shift camera offset
-    const offset = new THREE.Vector3(0, 7.5, 12);
-    offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationYRef.current);
-    const desiredCamPos = posRef.current.clone().add(offset);
-    camera.position.lerp(desiredCamPos, delta * 4.5);
-    camera.lookAt(cameraTarget);
-
     // Proximity check against 7 agents
     let closestAgent: AgentInfo | null = null;
-    let minDist = 5.0;
+    let minDist = 5.2;
 
     DEPARTMENTS.forEach((dept) => {
       const agentPos = new THREE.Vector3(...dept.position);
@@ -162,10 +138,10 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
   });
 
   return (
-    <group ref={playerGroupRef} position={[0, 0, 42]}>
+    <group ref={playerGroupRef} position={[0, 0, 16]}>
       {/* Contact Shadow Disk */}
       <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.65, 24]} />
+        <circleGeometry args={[0.7, 24]} />
         <meshBasicMaterial color="#0f172a" transparent opacity={0.3} />
       </mesh>
 
@@ -239,6 +215,12 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
           <meshBasicMaterial color="#0284c7" />
         </mesh>
       </group>
+
+      {/* Player floating indicator ring */}
+      <mesh position={[0, 0.03, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.8, 0.95, 24]} />
+        <meshBasicMaterial color="#22c55e" transparent opacity={0.6} />
+      </mesh>
     </group>
   );
 };

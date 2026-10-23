@@ -21,7 +21,6 @@ interface ParkSceneProps {
   resetTrigger: number;
   showLabels?: boolean;
   onNearAgentChange: (agent: AgentInfo | null) => void;
-  controlMode: 'avatar' | 'orbit';
 }
 
 export const ParkScene: React.FC<ParkSceneProps> = ({
@@ -29,14 +28,13 @@ export const ParkScene: React.FC<ParkSceneProps> = ({
   onSelectAgent,
   resetTrigger,
   showLabels = true,
-  onNearAgentChange,
-  controlMode
+  onNearAgentChange
 }) => {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
       <Canvas
         shadows
-        camera={{ fov: 45, near: 0.1, far: 500, position: [0, 38, 54] }}
+        camera={{ fov: 45, near: 0.1, far: 500, position: [0, 72, 68] }}
         style={{ background: '#e0f2fe' }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       >
@@ -64,13 +62,13 @@ export const ParkScene: React.FC<ParkSceneProps> = ({
         {/* Curved concentric and radial pedestrian paths */}
         <CurvedPath />
 
-        {/* Iconic Apple Park Ring Headquarters & Pavilions */}
-        <CircularHeadquarters outerRadius={26} innerRadius={18} height={5.2} floors={4} />
+        {/* Giant Apple Park Ring Headquarters (Radius 48m, Inner Courtyard 36m) */}
+        <CircularHeadquarters outerRadius={48} innerRadius={36} height={5.6} floors={4} />
 
         {/* Instanced orchards & perimeter tree clusters */}
         <TreeCluster />
 
-        {/* Scenic organic pond & footbridge */}
+        {/* Scenic organic pond & footbridge inside courtyard */}
         <Pond />
 
         {/* Flower beds & garden landscaping */}
@@ -79,7 +77,7 @@ export const ParkScene: React.FC<ParkSceneProps> = ({
         {/* Modern campus benches */}
         <BenchGroup />
 
-        {/* 7 Minecraft-style Voxel Department Agents at Workstations */}
+        {/* All 7 Minecraft-style Voxel Department Agents inside the Giant Circle */}
         {DEPARTMENTS.map((dept) => (
           <VoxelAgent
             key={dept.id}
@@ -90,15 +88,15 @@ export const ParkScene: React.FC<ParkSceneProps> = ({
           />
         ))}
 
-        {/* Playable Minecraft Avatar that walks around the campus! */}
+        {/* Playable Minecraft Avatar that walks smoothly inside the Giant Circle */}
         <PlayerAvatar
           onNearAgentChange={onNearAgentChange}
           onInteractAgent={onSelectAgent}
           resetTrigger={resetTrigger}
         />
 
-        {/* OrbitControls when user wants free-orbit camera mode */}
-        {controlMode === 'orbit' && <CameraController resetTrigger={resetTrigger} />}
+        {/* Steady, fixed camera controller - NO dizziness, NO auto-rotate, steady overview */}
+        <CameraController resetTrigger={resetTrigger} />
       </Canvas>
     </div>
   );
