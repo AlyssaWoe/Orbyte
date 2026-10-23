@@ -15,34 +15,21 @@ from backend.ai_engines.runpod_client import runpod_client
 
 class IngestionEngine:
     @staticmethod
-    def extract_text_from_file(file_path: str, filename: str) -> Tuple[str, str]:
-        """
-        Extracts raw textual contents from PDFs, camera photos, or scanned receipts.
-        Returns (extracted_text, extraction_method).
-        """
-        ext = os.path.splitext(filename)[1].lower()
+    def _mime_for_ext(ext: str) -> str:
+        return {
+            ".pdf": "application/pdf",
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".webp": "image/webp",
+            ".bmp": "image/bmp",
+        }.get(ext, "application/octet-stream")
 
-        # 1. PDF File Extraction
-        if ext == ".pdf":
-            try:
-                import pypdf
-                reader = pypdf.PdfReader(file_path)
-                pages_text = []
-                for idx, page in enumerate(reader.pages):
-                    t = page.extract_text()
-                    if t:
-                        pages_text.append(t)
-                full_text = "\n".join(pages_text).strip()
-                if full_text:
-                    return full_text, "Docling Layout & Table Engine (PyPDF Native)"
-            except Exception as e:
-                print(f"PyPDF extraction error: {e}")
-
-        # 2. Image Snap / Photo / Receipt OCR
-        if ext in [".png", ".jpg", ".jpeg", ".webp", ".bmp"]:
-            # A. Check Windows Built-in Media OCR via PowerShell
-            try:
-                ps_script = f'''
+    @staticmethod
+    def _windows_ocr(file_path: str) -> str:
+        """Best-effort OCR through the Windows.Media.Ocr engine via PowerShell."""
+        try:
+            ps_script = f'''
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 $asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | ? {{ $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' }})[0]
 Function Await($WinRtTask, $ResultType) {{
@@ -63,23 +50,119 @@ $engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromUserProfileLanguages()
 $ocrResult = Await ($engine.RecognizeAsync($bitmap)) ([Windows.Media.Ocr.OcrResult])
 Write-Output $ocrResult.Text
 '''
-                res = subprocess.run(["powershell", "-Command", ps_script], capture_output=True, text=True, timeout=12)
-                ocr_out = res.stdout.strip()
-                if ocr_out and len(ocr_out) > 5:
-                    return ocr_out, "Docling Optical Character Recognition (Windows Media Engine)"
-            except Exception as e:
-                print(f"Windows OCR failed: {e}")
+            res = subprocess.run(["powershell", "-Command", ps_script], capture_output=True, text=True, timeout=12)
+            return res.stdout.strip()
+        except Exception as e:
+            print(f"Windows OCR failed: {e}")
+            return ""
 
-        # 3. Fallback for text files or unreadable formats
+    @staticmethod
+    def _local_extract(file_path: str, filename: str, ext: str) -> Tuple[str, str]:
+        """Extraction with no network: pypdf, then Windows OCR, then plain text."""
+        # 1. PDF File Extraction
+        if ext == ".pdf":
+            try:
+                import pypdf
+                reader = pypdf.PdfReader(file_path)
+                pages_text = []
+                for idx, page in enumerate(reader.pages):
+                    t = page.extract_text()
+                    if t:
+                        pages_text.append(t)
+                full_text = "\n".join(pages_text).strip()
+                if full_text:
+                    return full_text, "Docling Layout & Table Engine (PyPDF Native)"
+            except Exception as e:
+                print(f"PyPDF extraction error: {e}")
+
+        # 2. Image Snap / Photo / Receipt OCR
+        if ext in [".png", ".jpg", ".jpeg", ".webp", ".bmp"]:
+            ocr_out = IngestionEngine._windows_ocr(file_path)
+            if ocr_out and len(ocr_out) > 5:
+                return ocr_out, "Docling Optical Character Recognition (Windows Media Engine)"
+
+        # 3. Fallback for text files or unreadable formats.
+        #    Binary is sniffed out rather than trusted: an image or archive whose
+        #    bytes happen to be UTF-8-decodable would otherwise be returned as
+        #    "text", feeding garbage into field extraction and starving the OCR
+        #    path that could have read it properly. A NUL byte is the cheap,
+        #    standard signal that this is not a text file.
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                content = f.read().strip()
+            with open(file_path, "rb") as f:
+                raw = f.read()
+            if raw and b"\x00" not in raw[:8192]:
+                content = raw.decode("utf-8", errors="ignore").strip()
                 if content:
                     return content, "Standard Text Decoder"
         except Exception:
             pass
 
         return "", "Unknown Format"
+
+    @staticmethod
+    def _runpod_extract(file_path: str, filename: str, ext: str) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Attempt extraction on the RunPod worker. Returns (None, None) whenever the
+        endpoint is off, unreachable, or answered nothing, so the caller simply
+        keeps whatever the local path produced.
+        """
+        if not runpod_client.is_configured():
+            return None, None
+        try:
+            with open(file_path, "rb") as fh:
+                blob = fh.read()
+        except Exception as e:
+            print(f"RunPod OCR skipped, could not read file: {e}")
+            return None, None
+        if not blob:
+            return None, None
+
+        try:
+            res = runpod_client.run_ocr(blob, filename, mime_type=IngestionEngine._mime_for_ext(ext))
+        except Exception as e:
+            # The client is written not to raise; this is a second seatbelt so a
+            # hosted-OCR problem can never fail an invoice upload.
+            print(f"RunPod OCR failed: {e}")
+            return None, None
+
+        if res and res.get("success") and str(res.get("text") or "").strip():
+            engine = res.get("engine") or "RunPod OCR"
+            return res["text"].strip(), f"Docling Layout & OCR ({engine})"
+        if res and res.get("reason"):
+            print(f"RunPod OCR unavailable ({res.get('reason')}); using local extraction.")
+        return None, None
+
+    @classmethod
+    def extract_text_from_file(cls, file_path: str, filename: str) -> Tuple[str, str]:
+        """
+        Extracts raw textual contents from PDFs, camera photos, or scanned receipts.
+        Returns (extracted_text, extraction_method).
+
+        Local extraction runs first by default: it is free, instant, and needs no
+        network. When it returns nothing -- a scanned PDF with no text layer, or a
+        photo the Windows engine cannot read -- the RunPod OCR worker is tried
+        before giving up. Setting RUNPOD_OCR_FIRST=1 reverses the order for
+        operators who would rather rely on the hosted engine.
+        """
+        ext = os.path.splitext(filename)[1].lower()
+        configured = runpod_client.is_configured()
+        ocr_first = configured and os.environ.get("RUNPOD_OCR_FIRST", "0") == "1"
+
+        if ocr_first:
+            rp_text, rp_method = cls._runpod_extract(file_path, filename, ext)
+            if rp_text:
+                return rp_text, rp_method
+
+        text, method = cls._local_extract(file_path, filename, ext)
+        if text:
+            return text, method
+
+        if configured and not ocr_first:
+            rp_text, rp_method = cls._runpod_extract(file_path, filename, ext)
+            if rp_text:
+                return rp_text, rp_method
+
+        return text, method
 
     @classmethod
     def process_invoice_document(

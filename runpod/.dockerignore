@@ -1,0 +1,9 @@
+# Build context is this directory:  docker build -t orbyte-runpod:1.0.0 runpod/
+# Docker reads <context>/.dockerignore, so these patterns are relative to runpod/.
+# The repo's frontend/, backend/ and .git/ are outside this context and are
+# therefore never copied into the GPU image.
+__pycache__
+*.pyc
+*.log
+.env
+README.md

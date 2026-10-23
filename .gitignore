@@ -7,3 +7,8 @@ env/
 venv/
 *.log
 .system_generated/
+
+# RunPod endpoint config. The client no longer writes an API key here, but if an
+# older version left one behind it must never be committed.
+runpod_config.json
+backend/database/runpod_config.json

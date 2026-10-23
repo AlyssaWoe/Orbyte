@@ -1,0 +1,27 @@
+# Orbyte RunPod worker dependencies.
+#
+# Deliberately separate from the app's requirements.txt: this file ships inside
+# the GPU image, that one runs on Render/localhost. Installing both everywhere
+# would put torch on the free web dyno.
+
+# RunPod's serverless runtime — provides runpod.serverless.start().
+runpod>=1.7.0
+
+# --- llm ---
+torch>=2.4.0
+transformers>=4.46.0
+accelerate>=1.0.0
+safetensors>=0.4.0
+huggingface_hub>=0.26.0
+
+# --- ocr ---
+pypdf>=5.0.0
+pillow>=10.0.0
+pytesseract>=0.3.13
+PyMuPDF>=1.24.0
+
+# Optional, and commented out on purpose. vLLM gives a large throughput win and
+# handler.py uses it automatically when importable, but it pins its own torch and
+# CUDA build. Uncomment only if the base image below matches the torch version
+# vLLM wants; a mismatch is a multi-gigabyte rebuild that fails at import.
+#   vllm>=0.6.0

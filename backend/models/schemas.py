@@ -113,6 +113,19 @@ class DeepSeekReplyInterpretation(BaseModel):
     escalation_required: bool = False
     escalation_reason: Optional[str] = None
 
+    # --- RunPod enrichment (optional) ---------------------------------------
+    # Every field above this line is computed deterministically and is
+    # authoritative. These fields are additive only: the RunPod model may add
+    # narrative and may propose an intent, but it can never clear a date
+    # conflict, un-flag an injection, or lower an escalation. Where the model
+    # contradicts a deterministic fact the fact stands, and the disagreement is
+    # recorded in model_disagreements so a reviewer sees it rather than losing it.
+    model_engine: Optional[str] = None
+    model_summary: Optional[str] = None
+    model_suggested_intent: Optional[str] = None
+    model_disagreements: List[str] = []
+    model_latency_ms: Optional[int] = None
+
 # --- Agent 5: Collection Strategy & Follow-up Schemas ---
 class CollectionStrategyRecommendation(BaseModel):
     invoice_id: str
