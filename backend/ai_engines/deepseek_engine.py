@@ -1,20 +1,144 @@
 """
 Agent 4 & Agent 5: DeepSeek Language Engine
 Handles Customer Reply Understanding (Agent 4) and Collection Strategy Message Drafting (Agent 5).
-Includes strict prompt injection defense, date extraction, and deterministic policy guardrails.
+Features P0 Date-vs-Weekday Conflict Detection, Prompt Injection Defense, and Policy Guardrails.
 """
 import re
 import uuid
 from datetime import datetime, date, timedelta
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 from backend.models.schemas import (
     DeepSeekReplyInterpretation, CollectionStrategyRecommendation,
     ValidatedInvoice, WorkflowState
 )
+from backend.ai_engines.runpod_client import runpod_client
+
+WEEKDAY_MAP = {
+    # English
+    "monday": (0, "Monday"), "mon": (0, "Monday"),
+    "tuesday": (1, "Tuesday"), "tue": (1, "Tuesday"), "tues": (1, "Tuesday"),
+    "wednesday": (2, "Wednesday"), "wed": (2, "Wednesday"),
+    "thursday": (3, "Thursday"), "thu": (3, "Thursday"), "thur": (3, "Thursday"), "thurs": (3, "Thursday"),
+    "friday": (4, "Friday"), "fri": (4, "Friday"),
+    "saturday": (5, "Saturday"), "sat": (5, "Saturday"),
+    "sunday": (6, "Sunday"), "sun": (6, "Sunday"),
+    # Chinese
+    "周一": (0, "周一/Monday"), "星期一": (0, "星期一/Monday"), "礼拜一": (0, "礼拜一/Monday"),
+    "周二": (1, "周二/Tuesday"), "星期二": (1, "星期二/Tuesday"), "礼拜二": (1, "礼拜二/Tuesday"),
+    "周三": (2, "周三/Wednesday"), "星期三": (2, "星期三/Wednesday"), "礼拜三": (2, "礼拜三/Wednesday"),
+    "周四": (3, "周四/Thursday"), "星期四": (3, "星期四/Thursday"), "礼拜四": (3, "礼拜四/Thursday"),
+    "周五": (4, "周五/Friday"), "星期五": (4, "星期五/Friday"), "礼拜五": (4, "礼拜五/Friday"),
+    "周六": (5, "周六/Saturday"), "星期六": (5, "星期六/Saturday"), "礼拜六": (5, "礼拜六/Saturday"),
+    "周日": (6, "周日/Sunday"), "星期日": (6, "星期日/Sunday"), "星期天": (6, "星期天/Sunday"), "周天": (6, "周天/Sunday"),
+}
+
+MONTH_MAP = {
+    "jan": 1, "january": 1, "feb": 2, "february": 2, "mar": 3, "march": 3,
+    "apr": 4, "april": 4, "may": 5, "jun": 6, "june": 6, "jul": 7, "july": 7,
+    "aug": 8, "august": 8, "sep": 9, "september": 9, "oct": 10, "october": 10,
+    "nov": 11, "november": 11, "dec": 12, "december": 12
+}
 
 class DeepSeekEngine:
-    @staticmethod
+    @classmethod
+    def detect_date_conflict(cls, text: str) -> Tuple[bool, Optional[str], Optional[str], Optional[str], Optional[Dict[str, Any]]]:
+        """
+        P0 Security Requirement: Detects conflict between stated weekday and calendar date.
+        Returns: (has_conflict, stated_weekday, parsed_date, actual_weekday, details)
+        """
+        lower = text.lower()
+        today = date.today()
+        current_year = today.year
+
+        # 1. Detect stated weekday
+        found_weekday_idx = None
+        found_weekday_name = None
+        for key, (idx, name) in WEEKDAY_MAP.items():
+            if re.search(r'\b' + re.escape(key) + r'\b', lower) or key in text:
+                found_weekday_idx = idx
+                found_weekday_name = name
+                break
+
+        # 2. Detect calendar date
+        parsed_dt = None
+
+        # Pattern A: YYYY-MM-DD or YYYY/MM/DD
+        iso_m = re.search(r'(\d{4})[-/](\d{1,2})[-/](\d{1,2})', text)
+        if iso_m:
+            try:
+                parsed_dt = date(int(iso_m.group(1)), int(iso_m.group(2)), int(iso_m.group(3)))
+            except ValueError:
+                pass
+
+        # Pattern B: Chinese format: e.g. 11月12日 or 11月12号 or 2026年11月12日
+        if not parsed_dt:
+            cn_m = re.search(r'(?:(\d{4})年)?\s*(\d{1,2})月\s*(\d{1,2})[日号]', text)
+            if cn_m:
+                y = int(cn_m.group(1)) if cn_m.group(1) else current_year
+                try:
+                    parsed_dt = date(y, int(cn_m.group(2)), int(cn_m.group(3)))
+                except ValueError:
+                    pass
+
+        # Pattern C: Month Day (e.g. Nov 12, November 12th, Nov. 12, 2026)
+        if not parsed_dt:
+            en_m = re.search(r'(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:\s*,?\s*(\d{4}))?', lower)
+            if en_m:
+                m_num = MONTH_MAP.get(en_m.group(1)[:3])
+                d_num = int(en_m.group(2))
+                y_num = int(en_m.group(3)) if en_m.group(3) else current_year
+                try:
+                    parsed_dt = date(y_num, m_num, d_num)
+                except ValueError:
+                    pass
+
+        # Pattern D: Day Month (e.g. 12th November, 12 Nov)
+        if not parsed_dt:
+            en_d_m = re.search(r'(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)(?:\s*,?\s*(\d{4}))?', lower)
+            if en_d_m:
+                d_num = int(en_d_m.group(1))
+                m_num = MONTH_MAP.get(en_d_m.group(2)[:3])
+                y_num = int(en_d_m.group(3)) if en_d_m.group(3) else current_year
+                try:
+                    parsed_dt = date(y_num, m_num, d_num)
+                except ValueError:
+                    pass
+
+        # 3. Check for conflict
+        if found_weekday_idx is not None and parsed_dt is not None:
+            actual_idx = parsed_dt.weekday()
+            actual_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][actual_idx]
+            
+            if actual_idx != found_weekday_idx:
+                details = {
+                    "stated_weekday": found_weekday_name,
+                    "stated_calendar_date": parsed_dt.isoformat(),
+                    "actual_weekday_for_date": actual_name,
+                    "conflict_type": "WEEKDAY_CALENDAR_MISMATCH"
+                }
+                return True, found_weekday_name, parsed_dt.isoformat(), actual_name, details
+            else:
+                return False, found_weekday_name, parsed_dt.isoformat(), actual_name, None
+
+        # If only weekday found without calendar date
+        if found_weekday_idx is not None and parsed_dt is None:
+            days_ahead = (found_weekday_idx - today.weekday()) % 7
+            if days_ahead <= 0:
+                days_ahead += 7
+            calculated_date = today + timedelta(days=days_ahead)
+            return False, found_weekday_name, calculated_date.isoformat(), found_weekday_name, None
+
+        # If only calendar date found
+        if parsed_dt is not None:
+            actual_idx = parsed_dt.weekday()
+            actual_name = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][actual_idx]
+            return False, actual_name, parsed_dt.isoformat(), actual_name, None
+
+        return False, None, None, None, None
+
+    @classmethod
     def analyze_reply(
+        cls,
         message_text: str,
         sender_email: str = "",
         invoice_context: Optional[ValidatedInvoice] = None
@@ -41,9 +165,11 @@ class DeepSeekEngine:
         inv_match = re.search(r'(INV[-_\s]?\d{4}[-_\s]?\d{3,5}|#\d{4,6})', raw_clean, re.IGNORECASE)
         inv_ref = inv_match.group(1).upper() if inv_match else (invoice_context.invoice_id if invoice_context else None)
 
-        # 3. Detect Intent & Claims
+        # 3. P0 Date-vs-Weekday Conflict Detection
+        has_conflict, stated_weekday, promised_date, actual_weekday, conflict_details = cls.detect_date_conflict(raw_clean)
+
+        # 4. Detect Intent & Claims
         claimed_paid = False
-        promised_date = None
         dispute_reason = None
         extension_days = None
         detected_intent = "general_inquiry"
@@ -57,58 +183,48 @@ class DeepSeekEngine:
             escalation_reason = "Untrusted input attempted system prompt injection / policy override."
             sentiment = "suspicious"
 
-        elif any(w in lower_text for w in ["dispute", "incorrect", "wrong amount", "never ordered", "cancel this", "billing error", "not satisfied"]):
+        elif any(w in lower_text or w in raw_clean for w in ["dispute", "incorrect", "wrong amount", "never ordered", "cancel this", "billing error", "not satisfied", "争议", "金额不对", "多算了"]):
             detected_intent = "invoice_dispute"
             sentiment = "frustrated"
             escalation_required = True
             escalation_reason = "Customer raised invoice dispute. Mandatory pause on collection follow-ups."
-            # Extract dispute excerpt
-            disp_m = re.search(r'(?:because|due to|issue with|reason:?)\s*([^\n\.\;]+)', raw_clean, re.IGNORECASE)
+            disp_m = re.search(r'(?:because|due to|issue with|reason:?|因为|由于)\s*([^\n\.\;，。]+)', raw_clean, re.IGNORECASE)
             dispute_reason = disp_m.group(1).strip() if disp_m else "Billing discrepancy flagged by customer"
 
-        elif any(w in lower_text for w in ["already paid", "we paid", "wire sent", "transferred", "payment completed", "receipt attached"]):
+        elif any(w in lower_text or w in raw_clean for w in ["already paid", "we paid", "wire sent", "transferred", "payment completed", "receipt attached", "已付款", "已付", "转账了", "汇款完成"]):
             detected_intent = "already_paid_claim"
             claimed_paid = True
             sentiment = "cooperative"
             escalation_required = False
-            # Look for wire / txn reference
-            txn_m = re.search(r'(?:ref|txn|wire|check|no\.?)\s*[:#]?\s*([A-Za-z0-9-_]+)', raw_clean, re.IGNORECASE)
+            txn_m = re.search(r'(?:ref|txn|wire|check|流水号|单号)\s*[:#]?\s*([A-Za-z0-9-_]+)', raw_clean, re.IGNORECASE)
             wire_ref = txn_m.group(1) if txn_m else "Unspecified"
             escalation_reason = f"Customer claims payment transmitted (Ref: {wire_ref}). Verification against bank feed initiated."
 
-        elif any(w in lower_text for w in ["will pay", "promise to pay", "schedule", "transfer on", "pay next", "by friday", "by monday"]):
+        elif any(w in lower_text or w in raw_clean for w in ["will pay", "promise to pay", "schedule", "transfer on", "pay next", "by friday", "by monday", "付款", "下周二", "下周", "安排付款", "保证支付"]):
             detected_intent = "payment_promise"
             sentiment = "cooperative"
-            # Date extraction heuristics
-            if "next monday" in lower_text:
-                days_ahead = (0 - date.today().weekday()) % 7 or 7
-                target_dt = date.today() + timedelta(days=days_ahead)
-                promised_date = target_dt.isoformat()
-            elif "by friday" in lower_text:
-                days_ahead = (4 - date.today().weekday()) % 7 or 7
-                target_dt = date.today() + timedelta(days=days_ahead)
-                promised_date = target_dt.isoformat()
-            elif "tomorrow" in lower_text:
-                promised_date = (date.today() + timedelta(days=1)).isoformat()
-            elif "end of the month" in lower_text or "end of month" in lower_text:
-                promised_date = "2026-10-31"
-            else:
-                date_m = re.search(r'(\d{4}[-/]\d{2}[-/]\d{2}|\w{3,9}\s+\d{1,2}(?:st|nd|rd|th)?)', raw_clean)
-                promised_date = date_m.group(1) if date_m else (date.today() + timedelta(days=7)).isoformat()
+            
+            # P0 Date Conflict Check for payment promises
+            if has_conflict:
+                escalation_required = True
+                escalation_reason = (
+                    f"P0 Conflict Detected: Customer stated '{stated_weekday}', but date '{promised_date}' "
+                    f"is actually a {actual_weekday}. Automation paused; human confirmation required."
+                )
 
-        elif any(w in lower_text for w in ["extension", "delay", "more time", "cashflow", "installment"]):
+        elif any(w in lower_text or w in raw_clean for w in ["extension", "delay", "more time", "cashflow", "installment", "延期", "宽限"]):
             detected_intent = "request_for_extension"
             sentiment = "urgent"
             escalation_required = True
             escalation_reason = "Customer requested payment term extension; requires credit approval."
-            ext_m = re.search(r'(\d+)\s*(?:days|weeks)', lower_text)
+            ext_m = re.search(r'(\d+)\s*(?:days|weeks|天|周)', lower_text)
             if ext_m:
                 val = int(ext_m.group(1))
-                extension_days = val * 7 if "week" in lower_text else val
+                extension_days = val * 7 if ("week" in lower_text or "周" in lower_text) else val
             else:
                 extension_days = 14
 
-        confidence = 0.95 if not prompt_injection_flag else 0.99
+        confidence = 0.96 if not prompt_injection_flag else 0.99
 
         return DeepSeekReplyInterpretation(
             message_id=f"MSG-{uuid.uuid4().hex[:6].upper()}",
@@ -118,6 +234,10 @@ class DeepSeekEngine:
             intent_confidence=confidence,
             claimed_paid=claimed_paid,
             promised_date=promised_date,
+            stated_weekday=stated_weekday,
+            actual_weekday=actual_weekday,
+            date_conflict=has_conflict,
+            date_conflict_details=conflict_details,
             dispute_reason=dispute_reason,
             requested_extension_days=extension_days,
             prompt_injection_flag=prompt_injection_flag,
@@ -127,6 +247,7 @@ class DeepSeekEngine:
                 "extracted_sender": sender_email,
                 "parsed_date": promised_date,
                 "claimed_paid": claimed_paid,
+                "date_conflict": has_conflict,
                 "injection_detected": prompt_injection_flag
             },
             escalation_required=escalation_required,
@@ -140,52 +261,54 @@ class DeepSeekEngine:
     ) -> CollectionStrategyRecommendation:
         """
         Agent 5: Synthesizes professional follow-up drafts guided by deterministic rules.
+        CRITICAL: Always references current authoritative balance_due (never the original total).
         """
         today = date.today()
         try:
             due_dt = datetime.strptime(invoice.due_date, "%Y-%m-%d").date()
             overdue_days = max(0, (today - due_dt).days)
         except Exception:
-            overdue_days = 10
+            overdue_days = 13
 
         # Deterministic Tone Selection based on aging brackets
         if overdue_days <= 7:
             tone = "gentle_reminder"
-            subject = f"Friendly Reminder: Invoice {invoice.invoice_id} from Orbyte"
+            subject = f"Friendly Reminder: Outstanding Statement for Invoice {invoice.invoice_id}"
             body = (
                 f"Dear {invoice.customer_name} Accounting Team,\n\n"
-                f"We hope this note finds you well. This is a gentle reminder that invoice {invoice.invoice_id} "
-                f"for ${invoice.balance_due:,.2f} {invoice.currency} was due on {invoice.due_date}.\n\n"
-                f"If payment has already been sent, please disregard this notice. Otherwise, we would appreciate "
-                f"it if you could confirm the scheduled settlement date.\n\n"
+                f"We hope this note finds you well. This is a gentle reminder regarding invoice {invoice.invoice_id}. "
+                f"Our records indicate a current remaining balance of ${invoice.balance_due:,.2f} {invoice.currency} "
+                f"(originally due on {invoice.due_date}).\n\n"
+                f"If payment has already been initiated, please let us know the bank transfer reference. "
+                f"Otherwise, please confirm the expected settlement date.\n\n"
                 f"Warm regards,\nOrbyte Accounts Receivable"
             )
-            requires_approval = False
-            approval_reason = None
+            requires_approval = (invoice.balance_due > 4000.00)
+            approval_reason = f"High balance threshold ($4,000): Balance ${invoice.balance_due:,.2f} requires supervisor review." if requires_approval else None
 
         elif overdue_days <= 21:
             tone = "polite_followup"
-            subject = f"Follow-up: Overdue Invoice {invoice.invoice_id} (${invoice.balance_due:,.2f})"
+            subject = f"Follow-up: Unsettled Balance on Invoice {invoice.invoice_id} (${invoice.balance_due:,.2f})"
             body = (
                 f"Dear {invoice.customer_name} Accounts Payable,\n\n"
-                f"We are following up on outstanding invoice {invoice.invoice_id} in the amount of "
-                f"${invoice.balance_due:,.2f} {invoice.currency}, which is now {overdue_days} days past due.\n\n"
-                f"To maintain smooth account standing, please review this statement and arrange the wire or ACH transfer "
-                f"at your earliest convenience. If there are any questions regarding this billing, please let us know immediately.\n\n"
+                f"We are following up on invoice {invoice.invoice_id}. The current remaining balance is "
+                f"${invoice.balance_due:,.2f} {invoice.currency}, which is now {overdue_days} days past the agreed due date.\n\n"
+                f"To maintain smooth account standing, please review this statement and schedule the transfer "
+                f"at your earliest convenience. If you have questions regarding this account, please reach out to us immediately.\n\n"
                 f"Thank you,\nOrbyte Finance Operations"
             )
-            requires_approval = (invoice.balance_due > 5000.00)
-            approval_reason = "Balance exceeds $5,000 threshold" if requires_approval else None
+            requires_approval = (invoice.balance_due > 4000.00)
+            approval_reason = f"Balance exceeds $4,000 threshold (${invoice.balance_due:,.2f})" if requires_approval else None
 
         else:
             tone = "formal_demand"
             subject = f"URGENT: Outstanding Balance on Invoice {invoice.invoice_id} ({overdue_days} Days Past Due)"
             body = (
                 f"Attention: Finance Management, {invoice.customer_name},\n\n"
-                f"Our records indicate that invoice {invoice.invoice_id} totaling ${invoice.balance_due:,.2f} {invoice.currency} "
-                f"remains outstanding and is now {overdue_days} days overdue.\n\n"
-                f"We request immediate confirmation of payment remittance within 48 hours to avoid service interruption "
-                f"or formal credit escalation. Please remit payment using our standard banking instructions.\n\n"
+                f"Our accounts receivable ledger indicates that invoice {invoice.invoice_id} totaling "
+                f"${invoice.balance_due:,.2f} {invoice.currency} remains outstanding and is now {overdue_days} days overdue.\n\n"
+                f"We request immediate confirmation of payment remittance within 48 hours to avoid credit holds "
+                f"or formal service pause. Please remit payment using our standard banking instructions.\n\n"
                 f"Sincerely,\nOrbyte Credit & Collections Department"
             )
             requires_approval = True
@@ -193,7 +316,7 @@ class DeepSeekEngine:
 
         pre_checks = {
             "invoice_valid": (invoice.validation_status == "VALIDATED"),
-            "balance_outstanding": (invoice.balance_due > 0),
+            "balance_outstanding": (invoice.balance_due > 0.01),
             "not_disputed": (invoice.current_state != WorkflowState.DISPUTED),
             "not_in_quiet_hours": True,
             "frequency_limit_passed": True

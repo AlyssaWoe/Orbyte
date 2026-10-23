@@ -6,6 +6,7 @@ Core Safety Rule: Models never post financial ledger updates. Only verified tran
 from typing import Optional, List, Dict, Any
 from backend.models.schemas import BankTransaction, ReconciliationResult, ValidatedInvoice, WorkflowState
 from backend.database.store import store
+from backend.ai_engines.ledger import central_ledger
 
 class ReconciliationEngine:
     TOLERANCE = 0.05
@@ -18,6 +19,7 @@ class ReconciliationEngine:
     ) -> ReconciliationResult:
         """
         Executes strict multi-tier deterministic matching.
+        Synchronizes directly with CentralLedger for partial or full payments.
         """
         if candidate_invoices is None:
             candidate_invoices = list(store.invoices.values())
@@ -35,7 +37,16 @@ class ReconciliationEngine:
                 
                 # Exact full match
                 if abs(diff) <= cls.TOLERANCE:
-                    evidence.append(f"Amount balances perfectly: TXN ${transaction.amount:.2f} matches balance ${inv.balance_due:.2f}")
+                    evidence.append(f"Amount balances perfectly: TXN ${transaction.amount:,.2f} matches balance ${inv.balance_due:,.2f}")
+                    # Apply ledger settlement
+                    central_ledger.apply_partial_or_full_settlement(
+                        invoice_id=inv.invoice_id,
+                        transaction_id=transaction.transaction_id,
+                        amount=transaction.amount,
+                        date_str=transaction.date,
+                        reference_memo=transaction.reference_note,
+                        payer_entity=transaction.sender_name
+                    )
                     return ReconciliationResult(
                         transaction_id=transaction.transaction_id,
                         matched_invoice_id=inv.invoice_id,
@@ -45,29 +56,38 @@ class ReconciliationEngine:
                         remaining_balance=0.0,
                         match_evidence=evidence,
                         requires_human_review=False,
-                        notes=f"Full payment verified and allocated to {inv.invoice_id}."
+                        notes=f"Full payment verified and allocated to {inv.invoice_id}. Ledger closed."
                     )
                 
                 # Partial payment
                 elif transaction.amount < inv.balance_due:
-                    new_bal = inv.balance_due - transaction.amount
-                    evidence.append(f"Partial payment: TXN ${transaction.amount:.2f} leaves remaining balance of ${new_bal:.2f}")
+                    new_bal = round(inv.balance_due - transaction.amount, 2)
+                    evidence.append(f"Partial payment verified: TXN ${transaction.amount:,.2f} applied. Authoritative remaining balance: ${new_bal:,.2f}")
+                    # Synchronize central authoritative ledger
+                    central_ledger.apply_partial_or_full_settlement(
+                        invoice_id=inv.invoice_id,
+                        transaction_id=transaction.transaction_id,
+                        amount=transaction.amount,
+                        date_str=transaction.date,
+                        reference_memo=transaction.reference_note,
+                        payer_entity=transaction.sender_name
+                    )
                     return ReconciliationResult(
                         transaction_id=transaction.transaction_id,
                         matched_invoice_id=inv.invoice_id,
                         match_status="PARTIALLY_PAID",
-                        confidence=0.98,
+                        confidence=0.99,
                         matched_amount=transaction.amount,
-                        remaining_balance=round(new_bal, 2),
+                        remaining_balance=new_bal,
                         match_evidence=evidence,
                         requires_human_review=False,
-                        notes=f"Partial settlement recognized for {inv.invoice_id}. Outstanding balance adjusted."
+                        notes=f"Partial settlement of ${transaction.amount:,.2f} recognized for {inv.invoice_id}. Ledger updated (Remaining: ${new_bal:,.2f})."
                     )
                 
-                # Overpayment
+                # Overpayment exception
                 else:
-                    over_amt = transaction.amount - inv.balance_due
-                    evidence.append(f"Overpayment detected: TXN exceeds balance by ${over_amt:.2f}")
+                    over_amt = round(transaction.amount - inv.balance_due, 2)
+                    evidence.append(f"Overpayment exception: TXN ${transaction.amount:,.2f} exceeds balance by ${over_amt:,.2f}")
                     return ReconciliationResult(
                         transaction_id=transaction.transaction_id,
                         matched_invoice_id=inv.invoice_id,
@@ -77,60 +97,80 @@ class ReconciliationEngine:
                         remaining_balance=0.0,
                         match_evidence=evidence,
                         requires_human_review=True,
-                        notes=f"Overpayment exception on {inv.invoice_id}: credit memo required for ${over_amt:.2f}."
+                        notes=f"Overpayment exception on {inv.invoice_id}: credit memo required for ${over_amt:,.2f}."
                     )
 
-        # Tier 2: Customer Name Match + Exact Amount
+        # Tier 2: Customer Name Match + Amount Match
         name_matches = []
         for inv in candidate_invoices:
-            if inv.balance_due > 0:
-                cust_norm = inv.customer_name.lower().split()[0] # e.g. "apex"
+            if inv.balance_due > 0.01:
+                cust_norm = inv.customer_name.lower().split()[0]
                 sender_norm = transaction.sender_name.lower()
                 
                 if cust_norm in sender_norm:
                     if abs(inv.balance_due - transaction.amount) <= cls.TOLERANCE:
-                        name_matches.append(inv)
+                        name_matches.append((inv, "full"))
+                    elif transaction.amount < inv.balance_due:
+                        name_matches.append((inv, "partial"))
 
         if len(name_matches) == 1:
-            matched_inv = name_matches[0]
+            matched_inv, pmt_type = name_matches[0]
             evidence.append(f"Sender name correlation: '{transaction.sender_name}' corresponds to '{matched_inv.customer_name}'")
-            evidence.append(f"Amount exact match: ${transaction.amount:.2f} balances open invoice {matched_inv.invoice_id}")
-            return ReconciliationResult(
-                transaction_id=transaction.transaction_id,
-                matched_invoice_id=matched_inv.invoice_id,
-                match_status="MATCHED_PAID",
-                confidence=0.95,
-                matched_amount=transaction.amount,
-                remaining_balance=0.0,
-                match_evidence=evidence,
-                requires_human_review=False,
-                notes=f"Secondary deterministic match confirmed against customer entity {matched_inv.customer_name}."
-            )
-        elif len(name_matches) > 1:
-            evidence.append(f"Multiple open invoices for customer match amount ${transaction.amount:.2f}: {[i.invoice_id for i in name_matches]}")
-            return ReconciliationResult(
-                transaction_id=transaction.transaction_id,
-                matched_invoice_id=None,
-                match_status="AMBIGUOUS_REVIEW",
-                confidence=0.50,
-                matched_amount=0.0,
-                remaining_balance=0.0,
-                match_evidence=evidence,
-                requires_human_review=True,
-                notes="Ambiguous allocation: customer has multiple identical open balances. Human review required."
-            )
+            
+            if pmt_type == "full":
+                central_ledger.apply_partial_or_full_settlement(
+                    invoice_id=matched_inv.invoice_id,
+                    transaction_id=transaction.transaction_id,
+                    amount=transaction.amount,
+                    date_str=transaction.date,
+                    reference_memo=transaction.reference_note,
+                    payer_entity=transaction.sender_name
+                )
+                return ReconciliationResult(
+                    transaction_id=transaction.transaction_id,
+                    matched_invoice_id=matched_inv.invoice_id,
+                    match_status="MATCHED_PAID",
+                    confidence=0.95,
+                    matched_amount=transaction.amount,
+                    remaining_balance=0.0,
+                    match_evidence=evidence,
+                    requires_human_review=False,
+                    notes=f"Matched by entity name and settled in full."
+                )
+            else:
+                new_bal = round(matched_inv.balance_due - transaction.amount, 2)
+                central_ledger.apply_partial_or_full_settlement(
+                    invoice_id=matched_inv.invoice_id,
+                    transaction_id=transaction.transaction_id,
+                    amount=transaction.amount,
+                    date_str=transaction.date,
+                    reference_memo=transaction.reference_note,
+                    payer_entity=transaction.sender_name
+                )
+                return ReconciliationResult(
+                    transaction_id=transaction.transaction_id,
+                    matched_invoice_id=matched_inv.invoice_id,
+                    match_status="PARTIALLY_PAID",
+                    confidence=0.92,
+                    matched_amount=transaction.amount,
+                    remaining_balance=new_bal,
+                    match_evidence=evidence,
+                    requires_human_review=False,
+                    notes=f"Partial settlement recognized by entity name match."
+                )
 
-        # Tier 3: Unmatched Transaction
+        # Tier 3: Unmatched Transaction -> Exception Review Queue
+        evidence.append("No unambiguous invoice reference or payer matching found in active receivables ledger.")
         return ReconciliationResult(
             transaction_id=transaction.transaction_id,
             matched_invoice_id=None,
             match_status="UNMATCHED",
             confidence=0.0,
             matched_amount=0.0,
-            remaining_balance=0.0,
-            match_evidence=["No matching invoice ID, customer alias, or balance amount found in active ledger."],
+            remaining_balance=transaction.amount,
+            match_evidence=evidence,
             requires_human_review=True,
-            notes="Unallocated bank deposit. Routed to Exception Queue for manual remittance advice matching."
+            notes="Unmatched incoming transaction routed to Human Exceptions Investigation Queue."
         )
 
 reconciliation_engine = ReconciliationEngine()

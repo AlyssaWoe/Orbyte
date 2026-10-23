@@ -10,7 +10,8 @@
       "due_date": "2026-10-10",
       "currency": "USD",
       "total_amount": 4850.0,
-      "balance_due": 4850.0,
+      "amount_paid": 2500.0,
+      "balance_due": 2350.0,
       "items": [
         {
           "description": "Freight Management & Route Optimization",
@@ -19,11 +20,24 @@
           "total": 4850.0
         }
       ],
+      "payment_history": [
+        {
+          "payment_id": "PMT-CFCD36",
+          "transaction_id": "TXN-55E8",
+          "amount": 2500.0,
+          "date": "2026-10-23",
+          "reference_memo": "WIRE SETTLEMENT INV-2026-0891",
+          "payer_entity": "Apex Logistics Corp",
+          "previous_balance": 4850.0,
+          "remaining_balance": 2350.0,
+          "timestamp": "2026-10-23T17:03:54.003337"
+        }
+      ],
       "validation_status": "VALIDATED",
       "confidence_score": 0.99,
       "source_filename": "Apex_Logistics_Oct_Inv.pdf",
       "created_at": "2026-10-23T00:12:06.134942",
-      "current_state": "FOLLOW_UP_ELIGIBLE",
+      "current_state": "PARTIALLY_PAID",
       "notes": "12 days overdue; awaiting friendly reminder."
     },
     "INV-2026-0892": {
@@ -36,6 +50,7 @@
       "due_date": "2026-10-15",
       "currency": "USD",
       "total_amount": 12400.0,
+      "amount_paid": 0.0,
       "balance_due": 12400.0,
       "items": [
         {
@@ -45,6 +60,7 @@
           "total": 12400.0
         }
       ],
+      "payment_history": [],
       "validation_status": "VALIDATED",
       "confidence_score": 0.97,
       "source_filename": "BioTech_Lab_Oct.pdf",
@@ -62,6 +78,7 @@
       "due_date": "2026-09-20",
       "currency": "USD",
       "total_amount": 3200.0,
+      "amount_paid": 0.0,
       "balance_due": 3200.0,
       "items": [
         {
@@ -71,6 +88,7 @@
           "total": 3200.0
         }
       ],
+      "payment_history": [],
       "validation_status": "VALIDATED",
       "confidence_score": 0.95,
       "source_filename": "Cascade_Sept_Retainer.pdf",
@@ -88,6 +106,7 @@
       "due_date": "2026-10-01",
       "currency": "USD",
       "total_amount": 7650.0,
+      "amount_paid": 0.0,
       "balance_due": 0.0,
       "items": [
         {
@@ -97,6 +116,7 @@
           "total": 7650.0
         }
       ],
+      "payment_history": [],
       "validation_status": "VALIDATED",
       "confidence_score": 0.99,
       "source_filename": "Delta_CNC_Batch.pdf",
@@ -114,6 +134,7 @@
       "due_date": "2026-09-15",
       "currency": "USD",
       "total_amount": 9500.0,
+      "amount_paid": 0.0,
       "balance_due": 4500.0,
       "items": [
         {
@@ -123,6 +144,7 @@
           "total": 9500.0
         }
       ],
+      "payment_history": [],
       "validation_status": "VALIDATED",
       "confidence_score": 0.98,
       "source_filename": "Epsilon_K8s_Project.pdf",
@@ -140,6 +162,7 @@
       "due_date": "2026-10-31",
       "currency": "USD",
       "total_amount": 3500.0,
+      "amount_paid": 0.0,
       "balance_due": 3500.0,
       "items": [
         {
@@ -149,6 +172,7 @@
           "total": 3500.0
         }
       ],
+      "payment_history": [],
       "validation_status": "VALIDATED",
       "confidence_score": 0.98,
       "source_filename": "Client_Commercial_Invoice.pdf",
@@ -184,6 +208,33 @@
       "sender_name": "Apex Logistics Corp",
       "reference_note": "TRANSFER APEX TRUCKING",
       "bank_account": "Bank of America *1099"
+    },
+    "TXN-9DA1": {
+      "transaction_id": "TXN-9DA1",
+      "date": "2026-10-23",
+      "amount": 2500.0,
+      "currency": "USD",
+      "sender_name": "Apex Logistics Corp",
+      "reference_note": "WIRE SETTLEMENT INV-2026-0891",
+      "bank_account": "Chase Operating Settlement"
+    },
+    "TXN-ED71": {
+      "transaction_id": "TXN-ED71",
+      "date": "2026-10-23",
+      "amount": 2500.0,
+      "currency": "USD",
+      "sender_name": "Apex Logistics Corp",
+      "reference_note": "WIRE SETTLEMENT INV-2026-0891",
+      "bank_account": "Chase Operating Settlement"
+    },
+    "TXN-55E8": {
+      "transaction_id": "TXN-55E8",
+      "date": "2026-10-23",
+      "amount": 2500.0,
+      "currency": "USD",
+      "sender_name": "Apex Logistics Corp",
+      "reference_note": "WIRE SETTLEMENT INV-2026-0891",
+      "bank_account": "Chase Operating Settlement"
     }
   },
   "approvals": {
@@ -201,9 +252,153 @@
       "status": "PENDING",
       "reviewed_by": null,
       "review_notes": null
+    },
+    "APP-TASK-8107": {
+      "task_id": "APP-TASK-8107",
+      "workflow_id": "WF-INV-2026-0891",
+      "invoice_id": "INV-2026-0891",
+      "customer_name": "Apex Logistics Corp",
+      "amount": 4850.0,
+      "proposed_action": "Dispatch Follow-up Notice (SEND_FOLLOWUP)",
+      "draft_message": "Outstanding balance of $4,850.00 on INV-2026-0891.",
+      "recipient": "billing@apexlogistics.com",
+      "risk_level": "Medium",
+      "created_at": "2026-10-23T16:56:11.524295",
+      "status": "PENDING",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    "APP-TASK-F9B6": {
+      "task_id": "APP-TASK-F9B6",
+      "workflow_id": "WF-INV-2026-0891",
+      "invoice_id": "INV-2026-0891",
+      "customer_name": "Apex Logistics Corp",
+      "amount": 4850.0,
+      "proposed_action": "Dispatch Follow-up Notice (SEND_FOLLOWUP)",
+      "draft_message": "Outstanding balance of $4,850.00 on INV-2026-0891.",
+      "recipient": "billing@apexlogistics.com",
+      "risk_level": "Medium",
+      "created_at": "2026-10-23T16:56:11.529807",
+      "status": "PENDING",
+      "reviewed_by": null,
+      "review_notes": null
+    },
+    "APP-TASK-0C02": {
+      "task_id": "APP-TASK-0C02",
+      "workflow_id": "WF-INV-2026-0891",
+      "invoice_id": "INV-2026-0891",
+      "customer_name": "Apex Logistics Corp",
+      "amount": 4850.0,
+      "proposed_action": "Dispatch Follow-up Notice (SEND_FOLLOWUP)",
+      "draft_message": "Outstanding balance of $4,850.00 on INV-2026-0891.",
+      "recipient": "billing@apexlogistics.com",
+      "risk_level": "Medium",
+      "created_at": "2026-10-23T17:03:54.000816",
+      "status": "PENDING",
+      "reviewed_by": null,
+      "review_notes": null
     }
   },
   "audit_logs": [
+    {
+      "audit_id": "AUD-A4B99DA4",
+      "timestamp": "2026-10-23T17:03:54.003337",
+      "workflow_id": "WF-INV-2026-0891",
+      "actor": "Agent 6 / Authoritative Ledger",
+      "action": "RECONCILIATION_PARTIAL_PAYMENT",
+      "from_state": "ACTION_PENDING_APPROVAL",
+      "to_state": "PARTIALLY_PAID",
+      "idempotency_key": "ledger_pmt_TXN-55E8_INV-2026-0891",
+      "decision_summary": "Partial payment of $2,500.00 applied. Authoritative balance updated from $4,850.00 to $2,350.00.",
+      "model_version": null,
+      "provider_result": null,
+      "metadata": {
+        "transaction_id": "TXN-55E8",
+        "amount_settled": 2500.0,
+        "previous_balance": 4850.0,
+        "authoritative_balance": 2350.0
+      }
+    },
+    {
+      "audit_id": "AUD-4383AD9A",
+      "timestamp": "2026-10-23T17:03:54.000816",
+      "workflow_id": "WF-INV-2026-0891",
+      "actor": "Agent 7: Governance Gate",
+      "action": "GATE_BLOCKED_UNAUTHORIZED",
+      "from_state": "ACTION_PENDING_APPROVAL",
+      "to_state": "ACTION_PENDING_APPROVAL",
+      "idempotency_key": "gate_pause_APP-TASK-0C02",
+      "decision_summary": "Execution blocked at backend gate: Account balance ($4,850.00) exceeds $4,000 threshold. Paused for supervisor sign-off.",
+      "model_version": null,
+      "provider_result": null,
+      "metadata": {}
+    },
+    {
+      "audit_id": "AUD-BB1B10BD",
+      "timestamp": "2026-10-23T16:56:11.531967",
+      "workflow_id": "WF-INV-2026-0891",
+      "actor": "Agent 6 / Authoritative Ledger",
+      "action": "RECONCILIATION_PARTIAL_PAYMENT",
+      "from_state": "ACTION_PENDING_APPROVAL",
+      "to_state": "PARTIALLY_PAID",
+      "idempotency_key": "ledger_pmt_TXN-ED71_INV-2026-0891",
+      "decision_summary": "Partial payment of $2,500.00 applied. Authoritative balance updated from $4,850.00 to $2,350.00.",
+      "model_version": null,
+      "provider_result": null,
+      "metadata": {
+        "transaction_id": "TXN-ED71",
+        "amount_settled": 2500.0,
+        "previous_balance": 4850.0,
+        "authoritative_balance": 2350.0
+      }
+    },
+    {
+      "audit_id": "AUD-D6C18ED6",
+      "timestamp": "2026-10-23T16:56:11.529807",
+      "workflow_id": "WF-INV-2026-0891",
+      "actor": "Agent 7: Governance Gate",
+      "action": "GATE_BLOCKED_UNAUTHORIZED",
+      "from_state": "ACTION_PENDING_APPROVAL",
+      "to_state": "ACTION_PENDING_APPROVAL",
+      "idempotency_key": "gate_pause_APP-TASK-F9B6",
+      "decision_summary": "Execution blocked at backend gate: Account balance ($4,850.00) exceeds $4,000 threshold. Paused for supervisor sign-off.",
+      "model_version": null,
+      "provider_result": null,
+      "metadata": {}
+    },
+    {
+      "audit_id": "AUD-C20A4847",
+      "timestamp": "2026-10-23T16:56:11.525604",
+      "workflow_id": "WF-INV-2026-0891",
+      "actor": "Agent 6 / Authoritative Ledger",
+      "action": "RECONCILIATION_PARTIAL_PAYMENT",
+      "from_state": "ACTION_PENDING_APPROVAL",
+      "to_state": "PARTIALLY_PAID",
+      "idempotency_key": "ledger_pmt_TXN-9DA1_INV-2026-0891",
+      "decision_summary": "Partial payment of $2,500.00 applied. Authoritative balance updated from $4,850.00 to $2,350.00.",
+      "model_version": null,
+      "provider_result": null,
+      "metadata": {
+        "transaction_id": "TXN-9DA1",
+        "amount_settled": 2500.0,
+        "previous_balance": 4850.0,
+        "authoritative_balance": 2350.0
+      }
+    },
+    {
+      "audit_id": "AUD-85221E44",
+      "timestamp": "2026-10-23T16:56:11.524295",
+      "workflow_id": "WF-INV-2026-0891",
+      "actor": "Agent 7: Governance Gate",
+      "action": "GATE_BLOCKED_UNAUTHORIZED",
+      "from_state": "ACTION_PENDING_APPROVAL",
+      "to_state": "ACTION_PENDING_APPROVAL",
+      "idempotency_key": "gate_pause_APP-TASK-8107",
+      "decision_summary": "Execution blocked at backend gate: Account balance ($4,850.00) exceeds $4,000 threshold. Paused for supervisor sign-off.",
+      "model_version": null,
+      "provider_result": null,
+      "metadata": {}
+    },
     {
       "audit_id": "AUD-CC9B3984",
       "timestamp": "2026-10-23T00:15:01.847767",

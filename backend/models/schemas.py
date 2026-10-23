@@ -48,8 +48,10 @@ class ValidatedInvoice(BaseModel):
     due_date: str
     currency: str = "USD"
     total_amount: float
+    amount_paid: float = 0.0
     balance_due: float
     items: List[InvoiceLineItem] = []
+    payment_history: List[Dict[str, Any]] = []
     validation_status: str = "VALIDATED" # VALIDATED, NEEDS_DATA_REVIEW, DUPLICATE
     confidence_score: float = 0.98
     source_filename: str
@@ -63,6 +65,7 @@ class IngestionResult(BaseModel):
     validation_errors: List[str] = []
     is_duplicate: bool = False
     evidence_extracted: Dict[str, Any] = {}
+    ocr_source: Optional[str] = "Docling Layout Engine"
 
 # --- Agent 3: Laya Decision & Routing Schemas ---
 class LayaLabel(str, Enum):
@@ -97,6 +100,10 @@ class DeepSeekReplyInterpretation(BaseModel):
     intent_confidence: float
     claimed_paid: bool = False
     promised_date: Optional[str] = None
+    stated_weekday: Optional[str] = None
+    actual_weekday: Optional[str] = None
+    date_conflict: bool = False
+    date_conflict_details: Optional[Dict[str, Any]] = None
     dispute_reason: Optional[str] = None
     requested_extension_days: Optional[int] = None
     prompt_injection_flag: bool = False
