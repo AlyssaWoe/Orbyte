@@ -16,20 +16,50 @@ from backend.ai_engines.reconciliation_engine import reconciliation_engine
 from backend.ai_engines.orchestrator import orchestrator
 
 FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
+PARK_BUILD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "park", "build"))
 SKILLS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "skills"))
 
-app = Flask(__name__, static_folder=FRONTEND_DIR)
+# Use Apple Park React build directory if compiled, otherwise fallback to frontend root
+ACTIVE_STATIC_DIR = PARK_BUILD_DIR if os.path.exists(os.path.join(PARK_BUILD_DIR, "index.html")) else FRONTEND_DIR
+app = Flask(__name__, static_folder=ACTIVE_STATIC_DIR)
 
 # --- Static Frontend Serving ---
 @app.route("/")
 def index():
+    if os.path.exists(os.path.join(PARK_BUILD_DIR, "index.html")):
+        return send_from_directory(PARK_BUILD_DIR, "index.html")
     return send_from_directory(FRONTEND_DIR, "index.html")
+
+@app.route("/legacy")
+def legacy_index():
+    return send_from_directory(FRONTEND_DIR, "index.html")
+
+@app.route("/static/<path:filename>")
+def serve_react_static(filename):
+    if os.path.exists(os.path.join(PARK_BUILD_DIR, "static", filename)):
+        return send_from_directory(os.path.join(PARK_BUILD_DIR, "static"), filename)
+    return send_from_directory(FRONTEND_DIR, filename)
 
 @app.route("/<path:filename>")
 def serve_static(filename):
+    if os.path.exists(os.path.join(PARK_BUILD_DIR, filename)):
+        return send_from_directory(PARK_BUILD_DIR, filename)
     return send_from_directory(FRONTEND_DIR, filename)
 
 # --- API Endpoints ---
+# --- File Upload for Agent 1 ---
+@app.route("/api/upload", methods=["POST"])
+def upload_invoice():
+    if "file" not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No selected file"}), 400
+    upload_dir = os.path.join(os.path.dirname(__file__), "uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+    save_path = os.path.join(upload_dir, file.filename)
+    file.save(save_path)
+    return jsonify({"filename": file.filename, "size": os.path.getsize(save_path)})
 # --- Health & Status ---
 @app.route("/health", methods=["GET"])
 def health_check():
