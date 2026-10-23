@@ -16,6 +16,8 @@ import { AgentInfo } from './data/api';
 export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<string>('campus');
   const [selectedAgent, setSelectedAgent] = useState<AgentInfo | null>(null);
+  const [nearAgent, setNearAgent] = useState<AgentInfo | null>(null);
+  const [controlMode, setControlMode] = useState<'avatar' | 'orbit'>('avatar');
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const [resetTrigger, setResetTrigger] = useState<number>(0);
 
@@ -32,9 +34,11 @@ export const App: React.FC = () => {
     setResetTrigger((prev) => prev + 1);
   };
 
+  const isCampus = currentView === 'campus';
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-      {/* 1. Dedicated Staff-Facing Dashboard Overlays */}
+      {/* 1. Dedicated Staff-Facing Dashboard Overlays (Clean full-screen, ZERO 3D bleed) */}
       {currentView === 'overview' && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 100, overflowY: 'auto' }}>
           <OverviewDashboard
@@ -86,26 +90,43 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* 2. 3D Apple Park Canvas Campus (Homepage & Central Navigation Hub) */}
-      <ParkScene
-        selectedAgent={selectedAgent}
-        onSelectAgent={handleSelectAgent}
-        resetTrigger={resetTrigger}
-      />
+      {/* 2. 3D Apple Park Canvas Campus (Completely hidden when on a dashboard page) */}
+      <div
+        style={{
+          width: '100vw',
+          height: '100vh',
+          position: 'absolute',
+          inset: 0,
+          display: isCampus ? 'block' : 'none'
+        }}
+      >
+        <ParkScene
+          selectedAgent={selectedAgent}
+          onSelectAgent={handleSelectAgent}
+          resetTrigger={resetTrigger}
+          showLabels={isCampus}
+          onNearAgentChange={setNearAgent}
+          controlMode={controlMode}
+        />
 
-      {/* 3. Ambient Top & Bottom HUD */}
-      <TopHud
-        onToggleDrawer={() => setDrawerOpen(true)}
-        onResetCamera={handleResetCamera}
-        onOpenAgent={(slug) => setCurrentView(slug)}
-      />
+        {/* 3. Ambient Top & Bottom HUD (Only in Campus view) */}
+        <TopHud
+          onToggleDrawer={() => setDrawerOpen(true)}
+          onResetCamera={handleResetCamera}
+          onOpenAgent={(slug) => setCurrentView(slug)}
+          nearAgent={nearAgent}
+          onInteractNearAgent={() => nearAgent && handleSelectAgent(nearAgent)}
+          controlMode={controlMode}
+          onToggleControlMode={() => setControlMode(controlMode === 'avatar' ? 'orbit' : 'avatar')}
+        />
 
-      {/* 4. Click Agent Modal Pop-up */}
-      <AgentModal
-        agent={selectedAgent}
-        onClose={() => setSelectedAgent(null)}
-        onOpenDashboard={handleOpenDashboard}
-      />
+        {/* 4. Click Agent Modal Pop-up */}
+        <AgentModal
+          agent={selectedAgent}
+          onClose={() => setSelectedAgent(null)}
+          onOpenDashboard={handleOpenDashboard}
+        />
+      </div>
 
       {/* 5. Slide-out Navigation Drawer */}
       <NavigationDrawer

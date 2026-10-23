@@ -8,12 +8,14 @@ interface VoxelAgentProps {
   agent: AgentInfo;
   isSelected: boolean;
   onSelect: (agent: AgentInfo) => void;
+  showLabels?: boolean;
 }
 
 export const VoxelAgent: React.FC<VoxelAgentProps> = ({
   agent,
   isSelected,
-  onSelect
+  onSelect,
+  showLabels = true
 }) => {
   const [hovered, setHovered] = useState(false);
   const headRef = useRef<THREE.Mesh>(null);
@@ -209,60 +211,63 @@ export const VoxelAgent: React.FC<VoxelAgentProps> = ({
         </group>
       </group>
 
-      {/* 3. Floating 3D Billboard Name Label & Status Indicator Pill */}
-      <Html
-        position={[0, 2.7, 0]}
-        center
-        distanceFactor={18}
-        style={{
-          pointerEvents: 'none',
-          userSelect: 'none',
-          whiteSpace: 'nowrap',
-          transform: 'scale(1)',
-          transition: 'all 0.2s ease-out'
-        }}
-      >
-        <div
+      {/* 3. Floating 3D Billboard Name Label & Status Indicator Pill (ONLY when showLabels is true) */}
+      {showLabels && (
+        <Html
+          position={[0, 2.7, 0]}
+          center
+          distanceFactor={18}
+          zIndexRange={[10, 0]}
           style={{
-            background: hovered || isSelected ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.95)',
-            color: hovered || isSelected ? '#ffffff' : '#0f172a',
-            padding: '6px 14px',
-            borderRadius: '24px',
-            boxShadow: '0 8px 20px rgba(0,0,0,0.18)',
-            border: `2px solid ${agent.color}`,
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            fontSize: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            cursor: 'pointer',
-            transition: 'transform 0.15s ease'
+            pointerEvents: 'none',
+            userSelect: 'none',
+            whiteSpace: 'nowrap',
+            transform: 'scale(1)',
+            transition: 'all 0.2s ease-out'
           }}
         >
-          <span
+          <div
             style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: agent.status === 'Active' ? '#22c55e' : '#3b82f6',
-              boxShadow: `0 0 8px ${agent.status === 'Active' ? '#22c55e' : '#3b82f6'}`
-            }}
-          />
-          <span style={{ fontWeight: 700 }}>{agent.shortName}</span>
-          <span
-            style={{
-              background: agent.accentColor,
-              color: '#0f172a',
-              fontSize: '10px',
-              padding: '2px 6px',
-              borderRadius: '12px',
-              fontWeight: 600
+              background: hovered || isSelected ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.95)',
+              color: hovered || isSelected ? '#ffffff' : '#0f172a',
+              padding: '6px 14px',
+              borderRadius: '24px',
+              boxShadow: '0 8px 20px rgba(0,0,0,0.18)',
+              border: `2px solid ${agent.color}`,
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              cursor: 'pointer',
+              transition: 'transform 0.15s ease'
             }}
           >
-            {agent.status}
-          </span>
-        </div>
-      </Html>
+            <span
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: agent.status === 'Active' ? '#22c55e' : '#3b82f6',
+                boxShadow: `0 0 8px ${agent.status === 'Active' ? '#22c55e' : '#3b82f6'}`
+              }}
+            />
+            <span style={{ fontWeight: 700 }}>{agent.shortName}</span>
+            <span
+              style={{
+                background: agent.accentColor,
+                color: '#0f172a',
+                fontSize: '10px',
+                padding: '2px 6px',
+                borderRadius: '12px',
+                fontWeight: 600
+              }}
+            >
+              {agent.status}
+            </span>
+          </div>
+        </Html>
+      )}
     </group>
   );
 };

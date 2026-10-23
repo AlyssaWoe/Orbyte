@@ -11,6 +11,7 @@ import { Pond } from './Pond';
 import { Garden } from './Garden';
 import { BenchGroup } from './Bench';
 import { VoxelAgent } from './VoxelAgent';
+import { PlayerAvatar } from './PlayerAvatar';
 import { CameraController } from './CameraController';
 import { AgentInfo, DEPARTMENTS } from '../../data/api';
 
@@ -18,19 +19,25 @@ interface ParkSceneProps {
   selectedAgent: AgentInfo | null;
   onSelectAgent: (agent: AgentInfo) => void;
   resetTrigger: number;
+  showLabels?: boolean;
+  onNearAgentChange: (agent: AgentInfo | null) => void;
+  controlMode: 'avatar' | 'orbit';
 }
 
 export const ParkScene: React.FC<ParkSceneProps> = ({
   selectedAgent,
   onSelectAgent,
-  resetTrigger
+  resetTrigger,
+  showLabels = true,
+  onNearAgentChange,
+  controlMode
 }) => {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
       <Canvas
         shadows
         camera={{ fov: 45, near: 0.1, far: 500, position: [0, 38, 54] }}
-        style={{ background: '#e0f2fe' }} // Clear light-blue sky background
+        style={{ background: '#e0f2fe' }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       >
         {/* Daytime sky with soft sun orientation */}
@@ -79,11 +86,19 @@ export const ParkScene: React.FC<ParkSceneProps> = ({
             agent={dept}
             isSelected={selectedAgent?.id === dept.id}
             onSelect={onSelectAgent}
+            showLabels={showLabels}
           />
         ))}
 
-        {/* Smooth OrbitControls with limits and reset handler */}
-        <CameraController resetTrigger={resetTrigger} />
+        {/* Playable Minecraft Avatar that walks around the campus! */}
+        <PlayerAvatar
+          onNearAgentChange={onNearAgentChange}
+          onInteractAgent={onSelectAgent}
+          resetTrigger={resetTrigger}
+        />
+
+        {/* OrbitControls when user wants free-orbit camera mode */}
+        {controlMode === 'orbit' && <CameraController resetTrigger={resetTrigger} />}
       </Canvas>
     </div>
   );

@@ -1,15 +1,24 @@
 import React from 'react';
+import { AgentInfo } from '../../data/api';
 
 interface TopHudProps {
   onToggleDrawer: () => void;
   onResetCamera: () => void;
   onOpenAgent: (slug: string) => void;
+  nearAgent: AgentInfo | null;
+  onInteractNearAgent: () => void;
+  controlMode: 'avatar' | 'orbit';
+  onToggleControlMode: () => void;
 }
 
 export const TopHud: React.FC<TopHudProps> = ({
   onToggleDrawer,
   onResetCamera,
-  onOpenAgent
+  onOpenAgent,
+  nearAgent,
+  onInteractNearAgent,
+  controlMode,
+  onToggleControlMode
 }) => {
   return (
     <>
@@ -79,12 +88,32 @@ export const TopHud: React.FC<TopHudProps> = ({
               Orbyte AI • Apple Park Campus
             </span>
             <span style={{ color: '#94a3b8' }}>|</span>
-            <span style={{ fontSize: '13px', color: '#475569' }}>Apex Logistics Operations</span>
+            <span style={{ fontSize: '13px', color: '#475569' }}>Apex Logistics SME</span>
           </div>
         </div>
 
-        {/* Right: Quick Alert Pills */}
-        <div style={{ display: 'flex', gap: '10px', pointerEvents: 'auto' }}>
+        {/* Right: Mode Toggle & Alerts */}
+        <div style={{ display: 'flex', gap: '10px', pointerEvents: 'auto', alignItems: 'center' }}>
+          <button
+            onClick={onToggleControlMode}
+            style={{
+              background: controlMode === 'avatar' ? '#f0fdf4' : '#ffffff',
+              border: `1px solid ${controlMode === 'avatar' ? '#86efac' : '#cbd5e1'}`,
+              color: controlMode === 'avatar' ? '#15803d' : '#334155',
+              padding: '8px 16px',
+              borderRadius: '24px',
+              fontWeight: 700,
+              fontSize: '13px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.04)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            {controlMode === 'avatar' ? '🎮 Avatar Walk Mode' : '🛰️ Orbit Camera Mode'}
+          </button>
+
           <button
             onClick={() => onOpenAgent('agent-2')}
             style={{
@@ -104,30 +133,42 @@ export const TopHud: React.FC<TopHudProps> = ({
           >
             <span>⚠️</span> 4 Overdue Invoices
           </button>
-
-          <button
-            onClick={() => onOpenAgent('agent-1')}
-            style={{
-              background: '#f0fdf4',
-              border: '1px solid #bbf7d0',
-              color: '#15803d',
-              padding: '8px 16px',
-              borderRadius: '24px',
-              fontWeight: 600,
-              fontSize: '13px',
-              boxShadow: '0 4px 12px rgba(21, 128, 61, 0.08)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <span>📄</span> Upload Bill
-          </button>
         </div>
       </div>
 
-      {/* Bottom Floating Interaction HUD */}
+      {/* Proximity Interaction Prompt when Avatar approaches an Agent */}
+      {nearAgent && (
+        <div
+          onClick={onInteractNearAgent}
+          style={{
+            position: 'absolute',
+            bottom: '80px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(15, 23, 42, 0.94)',
+            color: '#ffffff',
+            padding: '12px 24px',
+            borderRadius: '30px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '14px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            zIndex: 30,
+            animation: 'fadeInScale 0.2s ease-out',
+            border: `2px solid ${nearAgent.color}`
+          }}
+        >
+          <span style={{ fontSize: '20px' }}>💬</span>
+          <span>
+            Press <strong style={{ color: '#38bdf8', background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: '6px' }}>E</strong> or Click to talk to <strong style={{ color: nearAgent.color }}>{nearAgent.name}</strong>
+          </span>
+        </div>
+      )}
+
+      {/* Bottom Floating Movement Controls Tip */}
       <div
         style={{
           position: 'absolute',
@@ -149,11 +190,15 @@ export const TopHud: React.FC<TopHudProps> = ({
         }}
       >
         <span>
-          🖱️ <strong>Navigation:</strong> Drag to rotate • Scroll to zoom • Right-click to pan
+          🎮 <strong>Avatar Controls:</strong> Use <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>W</kbd> <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>A</kbd> <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>S</kbd> <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>D</kbd> or Arrows to walk
         </span>
         <span style={{ color: '#cbd5e1' }}>•</span>
         <span>
-          🧑‍💼 <strong>Select Agent:</strong> Click any voxel character to open staff workstation
+          Hold <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>Shift</kbd> to sprint
+        </span>
+        <span style={{ color: '#cbd5e1' }}>•</span>
+        <span>
+          Press <kbd style={{ background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>E</kbd> near agent to interact
         </span>
         <button
           onClick={onResetCamera}
@@ -168,7 +213,7 @@ export const TopHud: React.FC<TopHudProps> = ({
             cursor: 'pointer'
           }}
         >
-          🔄 Reset Camera
+          🔄 Reset Position
         </button>
       </div>
     </>
