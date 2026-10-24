@@ -184,21 +184,28 @@ UMvengers-Orbyte/
 ## How to Run
 
 ## Option 1 — Run on Replit (Recommended)
+
 1. Open the Replit Project, or import this repository via Create Repl → Import from GitHub:
-text:
+
+```
 https://github.com/AlyssaWoe/UMvengers-Orbyte.git
+```
 
 2. Open the Secrets tab (🔒) and add the variables listed in .env.example:
- · RUNPOD_API_KEY (your DeepSeek API key, or a RunPod key)
- · RUNPOD_ENDPOINT_URL (https://api.deepseek.com/chat/completions or your RunPod endpoint URL)
- · RUNPOD_MODEL (deepseek-flash)
+
+- RUNPOD_API_KEY (your DeepSeek API key, or a RunPod key)
+- RUNPOD_ENDPOINT_URL (https://api.deepseek.com/chat/completions or your RunPod endpoint URL)
+- RUNPOD_MODEL (deepseek-flash)
 
 3. Click Run. Replit will run:
-bash
+
+```
 python run.py
+```
 
 ## Option 2 — Run Locally
-bash
+
+```
 # 1. Clone the repository
 git clone https://github.com/AlyssaWoe/UMvengers-Orbyte.git
 cd UMvengers-Orbyte
@@ -217,17 +224,21 @@ cp .env.example .env
 python run.py
 # Or directly via module:
 python -m backend.app
+```
 
 Run Tests & Validation
-bash
+
+```
 # Run backend and RunPod handler selftests
 python tools/runpod_selftest.py
 # Health & status check against running server (http://localhost:8000)
 curl http://localhost:8000/api/status
 curl http://localhost:8000/api/config/runpod
+```
+
 ---
 
-## How We Use Replit *(Required)*
+## How We Use Replit _(Required)_
 
 - **Development:** the repository is imported into Replit from GitHub and run there as the submission environment.
 - **Secrets:** RunPod credentials are held in Replit Secrets and read from the environment. The application never writes an API key to disk — the RunPod client refuses to persist one, and a masked placeholder pasted back into the config form is rejected rather than applied.
@@ -235,7 +246,7 @@ curl http://localhost:8000/api/config/runpod
 
 📄 Proof of use: _TODO — `submission/SDC2026_TeamName_Replit_POU.pdf` not yet added._
 
-## How We Use RunPod *(Required)*
+## How We Use RunPod _(Required)_
 
 - **Workload:** two GPU tasks on one endpoint, dispatched by `input.task` — `llm` for reply understanding and draft synthesis (Agent 4 and 5), `ocr` for invoice and receipt extraction (Agent 1). A third task, `health`, reports capabilities so the app can decide whether to route there at all.
 - **Setup:** `runpod/handler.py` is deployed as a **RunPod Serverless Endpoint** from `runpod/Dockerfile`. Build and deploy steps are documented in [`runpod/README.md`](runpod/README.md).
