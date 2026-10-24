@@ -138,7 +138,7 @@ UMvengers-Orbyte/
 ├── submission/
 │   ├── SDC2026_UMvengers_Preliminary.pdf
 │   ├── SDC2026_UMvengers_TechDeclaration.pdf
-│   ├── SDC2026_TeamName_Replit_POU.pdf
+│   ├── SDC2026_UMvengers_Replit_POU.pdf
 │
 ├── .env.example
 ├── .gitignore
@@ -248,7 +248,7 @@ curl http://localhost:8000/api/config/runpod
 - **Secrets:** when a key is configured, RunPod/DeepSeek credentials are held in Replit Secrets and read from the environment. The application never writes an API key to disk — the RunPod client refuses to persist one, and a masked placeholder pasted back into the config form is rejected rather than applied.
 - **Runtime:** the Flask app listens on `0.0.0.0:8000`. Render starts it with gunicorn via the `Procfile`; Replit starts it with `python run.py` as defined in `.replit`. The prebuilt frontend is served from the committed `frontend/park/build/`.
 
-📄 Proof of use: _TODO — `submission/SDC2026_TeamName_Replit_POU.pdf` not yet added._
+📄 Proof of use: [`submission/SDC2026_UMvengers_Replit_POU.pdf`](submission/SDC2026_UMvengers_Replit_POU.pdf)
 
 ## How We Use RunPod _(Required)_
 
@@ -296,11 +296,11 @@ curl -X POST https://api.runpod.ai/v2/$RUNPOD_ENDPOINT_ID/runsync \
 - [ ] Team name, domain (Domain 1 / Domain 2) and SDG track filled in
 - [ ] Slide deck link added
 - [ ] Demo video link added
-- [ ] Replit used, with proof of use in `submission/`
+- [x] Replit used, with proof of use in `submission/`
 - [ ] RunPod used, with proof of use in `submission/`
-- [ ] Preliminary submission completed (`SDC2026_TeamName_Preliminary.pdf`)
-- [ ] Technology declaration completed (`SDC2026_TeamName_TechDeclaration.pdf`)
-- [ ] Submission files renamed with your team name (replace `TeamName`)
+- [x] Preliminary submission completed (`submission/SDC2026_UMvengers_Preliminary.pdf`)
+- [x] Technology declaration completed (`submission/SDC2026_UMvengers_TechDeclaration.pdf`)
+- [x] Submission files renamed with your team name (replace `TeamName`)
 - [ ] "How to Run" steps verified
 - [ ] No API keys or secrets committed to the repository
 
