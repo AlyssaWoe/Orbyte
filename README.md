@@ -243,7 +243,7 @@ curl http://localhost:8000/api/config/runpod
 
 ---
 
-## How We Use Replit _(Required)_
+## How We Use Replit
 
 - **Development:** the repository is imported into Replit from GitHub and run there as the submission environment.
 - **Secrets:** when a key is configured, RunPod/DeepSeek credentials are held in Replit Secrets and read from the environment. The application never writes an API key to disk — the RunPod client refuses to persist one, and a masked placeholder pasted back into the config form is rejected rather than applied.
