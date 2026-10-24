@@ -21,7 +21,7 @@ An AI-powered multi-agent platform that automates payment follow-ups with truste
 | Replit Project    | https://replit.com/@leowyh07/UMvengers-Orbyte-Runner                   |
 | Live Demo         | https://u-mvengers-orbyte-runner.replit.app                            |
 | Slide Deck        | [submission/Orbyte-Slide-Deck.pptx](submission/Orbyte-Slide-Deck.pptx) |
-| Demo Video        | _TODO: paste the link_                                                 |
+| Demo Video        | https://www.youtube.com/watch?v=cdCvROR-mgY                                                  |
 
 ---
 
@@ -281,7 +281,7 @@ curl http://localhost:8000/api/config/runpod
 
 - [x] Team name, domain (Domain 1 / Domain 2) and SDG track filled in
 - [x] Slide deck link added
-- [ ] Demo video link added
+- [x] Demo video link added
 - [x] Replit used, with proof of use in `submission/`
 - [x] Preliminary submission completed (`submission/SDC2026_UMvengers_Preliminary.pdf`)
 - [x] Technology declaration completed (`submission/SDC2026_UMvengers_TechDeclaration.pdf`)
