@@ -1,0 +1,9 @@
+run = "python run.py"
+entrypoint = "run.py"
+
+[env]
+PORT = "8000"
+
+[[ports]]
+localPort = 8000
+externalPort = 80

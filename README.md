@@ -20,7 +20,6 @@ UMvengers-Orbyte is an AI-powered multi-agent platform that helps SMEs automate 
 | GitHub Repository | https://github.com/AlyssaWoe/UMvengers-Orbyte        |
 | Replit Project    | https://replit.com/@leowyh07/UMvengers-Orbyte-Runner |
 | Live Demo         | https://u-mvengers-orbyte-runner.replit.app          |
-| RunPod Endpoint   | _TODO: not created yet — see "How We Use RunPod"_    |
 | Slide Deck        | https://u-mvengers-orbyte-runner.replit.app          |
 | Demo Video        | _TODO: paste the link_                               |
 
@@ -137,10 +136,9 @@ UMvengers-Orbyte/
 │   └── test_reconciliation.py
 │
 ├── submission/
-│   ├── SDC2026_TeamName_Preliminary.pdf
-│   ├── SDC2026_TeamName_TechDeclaration.pdf
+│   ├── SDC2026_UMvengers_Preliminary.pdf
+│   ├── SDC2026_UMvengers_TechDeclaration.pdf
 │   ├── SDC2026_TeamName_Replit_POU.pdf
-│   └── SDC2026_TeamName_Runpod_POU.pdf
 │
 ├── .env.example
 ├── .gitignore
@@ -197,11 +195,17 @@ https://github.com/AlyssaWoe/UMvengers-Orbyte.git
 - RUNPOD_ENDPOINT_URL (https://api.deepseek.com/chat/completions or your RunPod endpoint URL)
 - RUNPOD_MODEL (deepseek-flash)
 
-3. Click Run. Replit will run:
+3. Click Run. The run command is defined in `.replit`, so Replit starts:
 
 ```
-python run.py
+run = "python run.py"
+entrypoint = "run.py"
+[env] PORT = "8000"
+[[ports]] localPort = 8000  externalPort = 80
+
 ```
+
+The app listens on `0.0.0.0:8000`; `.replit` maps that port to the web preview. No manual run configuration is needed.
 
 ## Option 2 — Run Locally
 
@@ -241,8 +245,8 @@ curl http://localhost:8000/api/config/runpod
 ## How We Use Replit _(Required)_
 
 - **Development:** the repository is imported into Replit from GitHub and run there as the submission environment.
-- **Secrets:** RunPod credentials are held in Replit Secrets and read from the environment. The application never writes an API key to disk — the RunPod client refuses to persist one, and a masked placeholder pasted back into the config form is rejected rather than applied.
-- **Runtime:** the Flask app is started with gunicorn, and the prebuilt frontend is served from the committed `frontend/park/build/`.
+- **Secrets:** when a key is configured, RunPod/DeepSeek credentials are held in Replit Secrets and read from the environment. The application never writes an API key to disk — the RunPod client refuses to persist one, and a masked placeholder pasted back into the config form is rejected rather than applied.
+- **Runtime:** the Flask app listens on `0.0.0.0:8000`. Render starts it with gunicorn via the `Procfile`; Replit starts it with `python run.py` as defined in `.replit`. The prebuilt frontend is served from the committed `frontend/park/build/`.
 
 📄 Proof of use: _TODO — `submission/SDC2026_TeamName_Replit_POU.pdf` not yet added._
 
@@ -278,12 +282,12 @@ curl -X POST https://api.runpod.ai/v2/$RUNPOD_ENDPOINT_ID/runsync \
 
 ## Team
 
-| Name          | Role                                | GitHub |
-| ------------- | ----------------------------------- | ------ |
-| Wong Hanz     | Team Lead / Backend                 | _TODO_ |
-| Yeap Yi Theng | Frontend                            | _TODO_ |
-| Woe Xin Yi    | AI / RunPod                         | _TODO_ |
-| Leow Yi Han   | Database / Integration & Deployment |        |
+| Name          | Role                                | GitHub                                     |
+| ------------- | ----------------------------------- | ------------------------------------------ |
+| Wong Hanz     | Team Lead / Backend                 | [@wonghanz](https://github.com/wonghanz)   |
+| Yeap Yi Theng | Frontend                            | [@yeap01](https://github.com/yeap01)       |
+| Woe Xin Yi    | AI / RunPod                         | [@AlyssaWoe](https://github.com/AlyssaWoe) |
+| Leow Yi Han   | Database / Integration & Deployment | [@Han-bla](https://github.com/Han-bla)     |
 
 ---
 
