@@ -114,7 +114,7 @@ export const DEPARTMENTS: AgentInfo[] = [
     responsibilities: [
       'Synthesize contextual follow-up emails, SMS, and WhatsApp drafts',
       'Tailor tone according to overdue bracket (Friendly -> Formal -> Urgent)',
-      'Automatically flag high-balance invoices (> $5,000) for human approval',
+      'Automatically flag high-balance invoices (> $4,000) for human approval',
       'Track recipient channel preferences and communication history'
     ]
   },

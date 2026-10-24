@@ -1,0 +1,66 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 628 >>
+stream
+BT
+/F1 11 Tf
+16 TL
+56 780 Td
+(COMMERCIAL INVOICE) Tj
+T*
+(Invoice ID: INV-2026-8801) Tj
+T*
+(Issue Date: 2026-09-12) Tj
+T*
+(Due Date: 2026-10-10) Tj
+T*
+() Tj
+T*
+(Bill To: Nusantara Retail Group) Tj
+T*
+(Email: accounts@nusantara-retail.com) Tj
+T*
+() Tj
+T*
+(Description                        Qty     Unit Price      Amount) Tj
+T*
+(------------------------------------------------------------) Tj
+T*
+(Warehouse Pallet Racking             2        1450.00      2900.00) Tj
+T*
+(Forklift Preventive Servicing        1        1150.00      1150.00) Tj
+T*
+() Tj
+T*
+(Total Amount: $4,050.00 USD) Tj
+T*
+(Payment Terms: Net 28 days) Tj
+T*
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000920 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+990
+%%EOF

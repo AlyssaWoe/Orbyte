@@ -1,0 +1,15 @@
+COMMERCIAL INVOICE
+Invoice ID: INV-2026-8801
+Issue Date: 2026-09-12
+Due Date: 2026-10-10
+
+Bill To: Nusantara Retail Group
+Email: accounts@nusantara-retail.com
+
+Description                        Qty     Unit Price      Amount
+------------------------------------------------------------
+Warehouse Pallet Racking             2        1450.00      2900.00
+Forklift Preventive Servicing        1        1150.00      1150.00
+
+Total Amount: $4,050.00 USD
+Payment Terms: Net 28 days

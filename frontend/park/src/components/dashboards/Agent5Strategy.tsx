@@ -181,7 +181,7 @@ export const Agent5Strategy: React.FC<Agent5StrategyProps> = ({ onBackToCampus }
 
             <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13px', color: '#475569' }}>
               <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>🛡️ Governance Rule:</div>
-              All follow-up communications on balances exceeding <strong>$5,000 USD</strong> require human finance lead review before delivery.
+              All follow-up communications on balances exceeding <strong>$4,000 USD</strong> require human finance lead review before delivery.
             </div>
           </div>
 

@@ -373,7 +373,7 @@ class Orchestrator:
         })
 
         # Step 3: Agent 3 Laya Classification
-        customer_msg = "我们保证下周二 2026-11-12 付款" if test_date_conflict else "我们保证下周二付款，财务已经进入审批。"
+        customer_msg = "We promise to pay next Tuesday, 2026-11-12." if test_date_conflict else "We promise to pay next Tuesday. Finance approval is already in progress."
         laya_res = laya_engine.score_event(customer_msg)
         results.append({
             "step": 3,
