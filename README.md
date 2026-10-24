@@ -1,7 +1,7 @@
 # UMvengers-Orbyte
 
-UMvengers-Orbyte is an AI-powered multi-agent platform that helps SMEs automate payment follow-ups, manage overdue invoices, and improve cash flow through intelligent decision-making and customer communication.
-
+Smarter Collections. Faster Payments. Lower Costs.
+An AI-powered multi-agent platform that automates payment follow-ups with trusted knowledge, built-in compliance, and cost-efficient workflows under government ethics.
 ## Team Information
 
 | Field                 | Details           |
