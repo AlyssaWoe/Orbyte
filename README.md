@@ -15,13 +15,13 @@ UMvengers-Orbyte is an AI-powered multi-agent platform that helps SMEs automate 
 
 ## Links
 
-| Resource          | Link                                                 |
-| ----------------- | ---------------------------------------------------- |
-| GitHub Repository | https://github.com/AlyssaWoe/UMvengers-Orbyte        |
-| Replit Project    | https://replit.com/@leowyh07/UMvengers-Orbyte-Runner |
-| Live Demo         | https://u-mvengers-orbyte-runner.replit.app          |
+| Resource          | Link                                                                   |
+| ----------------- | ---------------------------------------------------------------------- |
+| GitHub Repository | https://github.com/AlyssaWoe/UMvengers-Orbyte                          |
+| Replit Project    | https://replit.com/@leowyh07/UMvengers-Orbyte-Runner                   |
+| Live Demo         | https://u-mvengers-orbyte-runner.replit.app                            |
 | Slide Deck        | [submission/Orbyte-Slide-Deck.pptx](submission/Orbyte-Slide-Deck.pptx) |
-| Demo Video        | _TODO: paste the link_                               |
+| Demo Video        | _TODO: paste the link_                                                 |
 
 ---
 
@@ -251,25 +251,6 @@ curl http://localhost:8000/api/config/runpod
 
 📄 Proof of use: [`submission/SDC2026_UMvengers_Replit_POU.pdf`](submission/SDC2026_UMvengers_Replit_POU.pdf)
 
-## How We Use RunPod _(Required)_
-
-- **Workload:** two GPU tasks on one endpoint, dispatched by `input.task` — `llm` for reply understanding and draft synthesis (Agent 4 and 5), `ocr` for invoice and receipt extraction (Agent 1). A third task, `health`, reports capabilities so the app can decide whether to route there at all.
-- **Setup:** `runpod/handler.py` is deployed as a **RunPod Serverless Endpoint** from `runpod/Dockerfile`. Build and deploy steps are documented in [`runpod/README.md`](runpod/README.md).
-- **Integration:** the Flask app calls the endpoint with `RUNPOD_ENDPOINT_URL` and `RUNPOD_API_KEY`. When a `runsync` call times out — which it does on a cold worker loading a 14B model — the client re-submits through the asynchronous route and polls, rather than reporting an outage.
-
-Example request:
-
-```bash
-curl -X POST https://api.runpod.ai/v2/$RUNPOD_ENDPOINT_ID/runsync \
-  -H "Authorization: Bearer $RUNPOD_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"input": {"task": "llm", "prompt": "Hello"}}'
-```
-
-📄 Proof of use: _TODO — `submission/SDC2026_TeamName_Runpod_POU.pdf` not yet added._
-
----
-
 ## Challenges & Learnings
 
 - **Challenges Faced:** Designing a multi-agent AI workflow was challenging because each agent needed to handle different tasks while keeping the overall process reliable and efficient. We addressed this by dividing Orbyte into smaller components for invoice validation, payment monitoring, customer reply understanding, and follow-up decisions. We also recognised the importance of human approval for uncertain or sensitive cases.
@@ -298,7 +279,6 @@ curl -X POST https://api.runpod.ai/v2/$RUNPOD_ENDPOINT_ID/runsync \
 - [x] Slide deck link added
 - [ ] Demo video link added
 - [x] Replit used, with proof of use in `submission/`
-- [ ] RunPod used, with proof of use in `submission/`
 - [x] Preliminary submission completed (`submission/SDC2026_UMvengers_Preliminary.pdf`)
 - [x] Technology declaration completed (`submission/SDC2026_UMvengers_TechDeclaration.pdf`)
 - [x] Submission files renamed with your team name (replace `TeamName`)
