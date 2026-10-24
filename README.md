@@ -20,7 +20,7 @@ UMvengers-Orbyte is an AI-powered multi-agent platform that helps SMEs automate 
 | GitHub Repository | https://github.com/AlyssaWoe/UMvengers-Orbyte        |
 | Replit Project    | https://replit.com/@leowyh07/UMvengers-Orbyte-Runner |
 | Live Demo         | https://u-mvengers-orbyte-runner.replit.app          |
-| Slide Deck        | https://u-mvengers-orbyte-runner.replit.app          |
+| Slide Deck        | [submission/Orbyte-Slide-Deck.pptx](submission/Orbyte-Slide-Deck.pptx) |
 | Demo Video        | _TODO: paste the link_                               |
 
 ---
@@ -139,6 +139,7 @@ UMvengers-Orbyte/
 │   ├── SDC2026_UMvengers_Preliminary.pdf
 │   ├── SDC2026_UMvengers_TechDeclaration.pdf
 │   ├── SDC2026_UMvengers_Replit_POU.pdf
+│   └── Orbyte-Slide-Deck.pptx
 │
 ├── .env.example
 ├── .gitignore
@@ -293,15 +294,16 @@ curl -X POST https://api.runpod.ai/v2/$RUNPOD_ENDPOINT_ID/runsync \
 
 ## Submission Checklist
 
-[X] Team name, domain (Domain 1 / Domain 2) and SDG track filled in
-[X] Slide deck link added
-[X] Demo video link added
-[X] Replit used, with proof of use in `submission/`
-[X] Preliminary submission completed (`SDC2026_UMvengers_Preliminary.pdf`)
-[X] Technology declaration completed (`SDC2026_UMvengers_TechDeclaration.pdf`)
-[X] Submission files renamed with your team name (replace `UMvengers`)
-[X] "How to Run" steps verified
-[X] No API keys or secrets committed to the repository
+- [x] Team name, domain (Domain 1 / Domain 2) and SDG track filled in
+- [x] Slide deck link added
+- [ ] Demo video link added
+- [x] Replit used, with proof of use in `submission/`
+- [ ] RunPod used, with proof of use in `submission/`
+- [x] Preliminary submission completed (`submission/SDC2026_UMvengers_Preliminary.pdf`)
+- [x] Technology declaration completed (`submission/SDC2026_UMvengers_TechDeclaration.pdf`)
+- [x] Submission files renamed with your team name (replace `TeamName`)
+- [x] "How to Run" steps verified
+- [x] No API keys or secrets committed to the repository
 
 ## License
 
