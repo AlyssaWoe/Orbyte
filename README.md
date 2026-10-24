@@ -29,7 +29,7 @@ UMvengers-Orbyte is an AI-powered multi-agent platform that helps SMEs automate 
 
 ### Problem
 
-Small and medium-sized enterprises (SMEs) often struggle with late payments, which can create cash-flow problems and make it difficult to pay salaries, suppliers, and operating expenses. Manual invoice tracking and payment reminders take time, while customer replies and payment records may be scattered across different platforms. These challenges reduce efficiency and limit business growth.
+Malaysian SMEs face cash-flow challenges due to delayed payments, while managing overdue invoices across spreadsheets, emails, messaging apps, and accounting systems is slow, fragmented, and error-prone. Existing AI solutions often lack trusted company knowledge, compliance safeguards, cost-efficient orchestration, and operational transparency, making them difficult for SMEs to adopt confidently.
 
 ### Solution
 
@@ -37,11 +37,13 @@ UMvengers-Orbyte is an AI-powered payment follow-up system that coordinates spec
 
 ### Key Features
 
+- Laya Decision Engine — Classifies customer events and routes them to the appropriate agent or human reviewer.
+
 - AI-Powered Invoice Processing — Extracts and validates invoice information, identifies missing fields, and detects potential duplicates.
 
 - Intelligent Payment Monitoring — Tracks due dates and overdue invoices, schedules reminders, and prevents unnecessary follow-ups when payment is verified.
 
-- Laya Decision Engine — Classifies customer events and routes them to the appropriate agent or human reviewer.
+- Cradle Compliance AI Skill – Encodes business best practices, ethics, and Malaysian government compliance requirements to ensure responsible and compliant AI actions.
 
 - AI Customer Reply Understanding — Interprets payment promises, payment claims, extension requests, and invoice disputes.
 
@@ -52,6 +54,8 @@ UMvengers-Orbyte is an AI-powered payment follow-up system that coordinates spec
 - Human Approval & Audit Trail — Supports review of sensitive or uncertain actions and records workflow decisions and execution results.
 
 - Interactive 3D Agent Dashboard — Provides a Minecraft-inspired, Three.js office interface where users can explore departments and access their respective dashboards.
+  
+- LLM Wiki + Unified Data Source (UDS) + RAG (LangGraph) – Retrieves accurate company knowledge, policies, invoices, and historical records to reduce AI hallucinations and improve decision quality.
 
 ### Tech Stack
 
