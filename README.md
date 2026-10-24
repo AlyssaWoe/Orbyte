@@ -293,16 +293,15 @@ curl -X POST https://api.runpod.ai/v2/$RUNPOD_ENDPOINT_ID/runsync \
 
 ## Submission Checklist
 
-- [ ] Team name, domain (Domain 1 / Domain 2) and SDG track filled in
-- [ ] Slide deck link added
-- [ ] Demo video link added
-- [x] Replit used, with proof of use in `submission/`
-- [ ] RunPod used, with proof of use in `submission/`
-- [x] Preliminary submission completed (`submission/SDC2026_UMvengers_Preliminary.pdf`)
-- [x] Technology declaration completed (`submission/SDC2026_UMvengers_TechDeclaration.pdf`)
-- [x] Submission files renamed with your team name (replace `TeamName`)
-- [ ] "How to Run" steps verified
-- [ ] No API keys or secrets committed to the repository
+[X] Team name, domain (Domain 1 / Domain 2) and SDG track filled in
+[X] Slide deck link added
+[X] Demo video link added
+[X] Replit used, with proof of use in `submission/`
+[X] Preliminary submission completed (`SDC2026_UMvengers_Preliminary.pdf`)
+[X] Technology declaration completed (`SDC2026_UMvengers_TechDeclaration.pdf`)
+[X] Submission files renamed with your team name (replace `UMvengers`)
+[X] "How to Run" steps verified
+[X] No API keys or secrets committed to the repository
 
 ## License
 
