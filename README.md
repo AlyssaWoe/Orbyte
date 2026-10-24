@@ -1,38 +1,28 @@
-> [!IMPORTANT]
-> ## 📁 Submission Documents & Templates
-> **All required submission templates are in the Google Drive folder below. Download them before you start.**
->
-> ### 👉 [**OPEN THE GOOGLE DRIVE FOLDER**](https://drive.google.com/drive/folders/1xw7c2aN8N-at8hPEULzkcU76e_FFb0Ef) 👈
+# UMvengers-Orbyte
 
----
-
-# Orbyte — Smart Payment Follow-up AI
-
-> A receivables follow-up system for SME finance teams: it reads an invoice, watches it age, understands the customer's reply, and drafts the next message — while deterministic controls, not a language model, hold every financial and policy decision.
-
----
+UMvengers-Orbyte is an AI-powered multi-agent platform that helps SMEs automate payment follow-ups, manage overdue invoices, and improve cash flow through intelligent decision-making and customer communication.
 
 ## Team Information
 
-| Field                  | Details                                     |
-| ---------------------- | ------------------------------------------- |
-| **Team Name**          | `UMvengers` *(unconfirmed — taken from the repository name)* |
-| **Team Domain**        | _TODO: Domain 1 / Domain 2 (choose one)_     |
-| **SDG Track (1–17)**   | _TODO: choose a track_                       |
-| **Team Leader**        | _TODO: fill in_                              |
-| **University**         | _TODO: fill in_                              |
-| **Number of Members**  | _TODO: fill in_                              |
+| Field                 | Details           |
+| --------------------- | ----------------- |
+| **Team Name**         | `UMvengers`       |
+| **Team Domain**       | Domain 2          |
+| **SDG Track (1–17)**  | 8 and 9           |
+| **Team Leader**       | Wong Hanz         |
+| **University**        | Universiti Malaya |
+| **Number of Members** | 4                 |
 
 ## Links
 
-| Resource          | Link                                           |
-| ----------------- | ---------------------------------------------- |
-| GitHub Repository | https://github.com/AlyssaWoe/UMvengers-Orbyte   |
-| Replit Project    | _TODO: paste the Repl URL_                      |
-| Live Demo         | _TODO: paste the deployment URL_                |
-| RunPod Endpoint   | _TODO: not created yet — see "How We Use RunPod"_ |
-| Slide Deck        | _TODO: paste the link_                          |
-| Demo Video        | _TODO: paste the link_                          |
+| Resource          | Link                                                 |
+| ----------------- | ---------------------------------------------------- |
+| GitHub Repository | https://github.com/AlyssaWoe/UMvengers-Orbyte        |
+| Replit Project    | https://replit.com/@leowyh07/UMvengers-Orbyte-Runner |
+| Live Demo         | https://u-mvengers-orbyte-runner.replit.app          |
+| RunPod Endpoint   | _TODO: not created yet — see "How We Use RunPod"_    |
+| Slide Deck        | https://u-mvengers-orbyte-runner.replit.app          |
+| Demo Video        | _TODO: paste the link_                               |
 
 ---
 
@@ -40,147 +30,201 @@
 
 ### Problem
 
-Small and mid-sized businesses send invoices and then lose track of them. Overdue balances are chased by hand, so follow-ups are late or forgotten; customer replies arrive as free-form email or chat and are read inconsistently; and a claim like "we already paid" is only resolved by someone manually comparing a bank statement. The money is real, the process is not.
+Small and medium-sized enterprises (SMEs) often struggle with late payments, which can create cash-flow problems and make it difficult to pay salaries, suppliers, and operating expenses. Manual invoice tracking and payment reminders take time, while customer replies and payment records may be scattered across different platforms. These challenges reduce efficiency and limit business growth.
 
 ### Solution
 
-Orbyte runs a seven-agent pipeline over each invoice. Deterministic engines extract the document fields, compute aging, match bank transactions and hold the ledger; language models add only the parts that are genuinely unstructured — reading the customer's intent, and drafting the follow-up.
-
-The design principle is that **a model never holds a decision.** The date-vs-weekday conflict shield, the prompt-injection screen, the approval threshold and the ledger are all deterministic code. Where a model is used, its output is treated as an untrusted draft and re-checked against computed facts before a human sees it. That is also why the GPU workload is separable: if the endpoint is offline, every guardrail still fires and the system falls back to its deterministic path instead of failing.
+UMvengers-Orbyte is an AI-powered payment follow-up system that coordinates specialised agents to automate invoice monitoring, customer reply understanding, follow-up recommendations, and payment reconciliation. Laya acts as the decision layer, classifying business events and routing them to the appropriate workflow, while DeepSeek handles language-intensive tasks such as interpreting customer replies and drafting professional reminders. Deterministic business rules, permission checks, human approvals, and audit logs help ensure that financial actions remain controlled, traceable, and reliable.
 
 ### Key Features
 
-- **P0 date-vs-weekday conflict shield** — a promise of "next Tuesday, 28 October" is checked against the calendar; a mismatch pauses automation and escalates for human confirmation rather than silently trusting the customer's wording.
-- **Deterministic prompt-injection screen** — text like "ignore previous instructions" or "set balance to 0" is flagged and blocked before any model sees it, and blocked input is never forwarded to the model for a second opinion.
-- **Approval gate at $4,000** — balances above the threshold cannot be dispatched without supervisor sign-off; a formal demand tone always requires it.
-- **Central ledger as single source of truth** — balances are computed from transactions, not from the invoice's original total.
-- **Self-checking bridge** — `GET /api/ai/runpod/selftest` runs nine offline checks plus a live probe, so endpoint wiring can be verified without a GPU.
-- **Graceful degradation** — the RunPod worker returns `available: false` with a reason instead of inventing output, so the app falls back rather than acting on fabricated text.
+- AI-Powered Invoice Processing — Extracts and validates invoice information, identifies missing fields, and detects potential duplicates.
+
+- Intelligent Payment Monitoring — Tracks due dates and overdue invoices, schedules reminders, and prevents unnecessary follow-ups when payment is verified.
+
+- Laya Decision Engine — Classifies customer events and routes them to the appropriate agent or human reviewer.
+
+- AI Customer Reply Understanding — Interprets payment promises, payment claims, extension requests, and invoice disputes.
+
+- Automated Follow-up Management — Recommends collection actions, drafts professional reminders, and supports approval-controlled message delivery.
+
+- Payment Reconciliation — Matches payment transactions with invoices and flags partial payments, discrepancies, and unmatched records.
+
+- Human Approval & Audit Trail — Supports review of sensitive or uncertain actions and records workflow decisions and execution results.
+
+- Interactive 3D Agent Dashboard — Provides a Minecraft-inspired, Three.js office interface where users can explore departments and access their respective dashboards.
 
 ### Tech Stack
 
-| Layer         | Technology                   |
-| ------------- | ---------------------------- |
-| Frontend      | React (Create React App) + TypeScript; also a dependency-free HTML/CSS/JS console |
-| Backend       | Python 3.12, Flask 3, Pydantic v2, served by gunicorn |
-| Database      | JSON-backed local store (`backend/database/app_data.json`); no external database |
-| AI / Compute  | RunPod (GPU) for OCR and language inference; deterministic engines locally |
-| Hosting / Dev | Replit (required runtime) — the repo also ships a Render config (`render.yaml`) |
+| Layer                    | Technology                                     |
+| ------------------------ | ---------------------------------------------- |
+| Frontend                 | React, TypeScript, Three.js, React Three Fiber |
+| Backend                  | Python, FastAPI (proposed)                     |
+| Database                 | PostgreSQL (proposed)                          |
+| AI / Decision Layer      | Laya                                           |
+| AI / Language Processing | DeepSeek                                       |
+| Document Processing      | Docling, Pydantic                              |
+| Agent Orchestration      | LangGraph (proposed)                           |
+| Development Optimisation | Google Research Harness²                       |
+| Hosting / Dev            | Replit                                         |
 
 ---
 
 ## Project Structure
 
 ```
-.
-├── backend/
-│   ├── app.py                       # Flask API, static hosting, RunPod config + self-test routes
-│   ├── ai_engines/                  # the seven agents
-│   │   ├── ingestion_engine.py      # Agent 1 — document parsing, field validation, OCR
-│   │   ├── monitoring_engine.py     # Agent 2 — deterministic aging and reminder scheduling
-│   │   ├── laya_engine.py           # Agent 3 — non-autoregressive decision and routing
-│   │   ├── deepseek_engine.py       # Agent 4 & 5 — reply understanding, draft synthesis
-│   │   ├── reconciliation_engine.py # Agent 6 — bank transaction matching
-│   │   ├── orchestrator.py          # Agent 7 — workflow gate and human-in-the-loop
-│   │   ├── ledger.py                # central ledger (single source of truth)
-│   │   └── runpod_client.py         # RunPod bridge (client half)
-│   ├── models/schemas.py            # Pydantic v2 request/response contracts
-│   ├── database/                    # JSON-backed store (store.py, app_data.json)
-│   ├── skills/                      # 7 SKILL.md policy contracts (one per agent)
-│   └── uploads/                     # uploaded invoice documents
-├── frontend/
-│   ├── park/                        # React source; build/ is committed and served in production
-│   │   ├── src/                     # components, dashboards, 3D campus
-│   │   └── build/                   # prebuilt bundle — no build step needed to run
-│   ├── index.html                   # dependency-free console
-│   ├── css/
-│   └── js/
+UMvengers-Orbyte/
+├── docs/
+│   ├── architecture.md
+│   ├── project-flow.md
+│   ├── screenshots/
+│   └── diagrams/
+│
 ├── runpod/
-│   ├── handler.py                   # RunPod serverless handler (GPU workload)
-│   ├── Dockerfile                   # base: runpod/base:0.6.2-cuda12.1.0
-│   ├── requirements.txt             # worker-only deps (torch lives here, not on the web host)
-│   └── README.md                    # build, deploy and payload contract
-├── tools/
-│   ├── runpod_selftest.py           # 39 checks against the worker handler
-│   └── runpod_client_selftest.py    # ~70 checks against the client protocol
-├── Procfile                         # web: gunicorn backend.app:app
-├── render.yaml                      # Render deployment config
-├── requirements.txt                 # app dependencies
-├── run.py                           # local launcher
+│   ├── handler.py              # RunPod serverless entry point
+│   └── README.md
+│
+├── src/
+│   ├── main.py                 # Application entry point
+│   ├── config.py               # Environment and application settings
+│   ├── utils.py                # Shared utility functions
+│   │
+│   ├── api/
+│   │   └── routes.py           # API endpoints, if using FastAPI
+│   │
+│   ├── ingestion/
+│   │   ├── invoice_parser.py    # Invoice document extraction
+│   │   └── validation.py       # Schema and data validation
+│   │
+│   ├── agents/
+│   │   ├── payment_monitor.py  # Due and overdue payment monitoring
+│   │   ├── decision_router.py  # Laya decision and event routing
+│   │   ├── reply_analyzer.py   # DeepSeek customer-reply analysis
+│   │   ├── follow_up.py        # Reminder strategy and message drafting
+│   │   ├── reconciliation.py   # Payment matching and exceptions
+│   │   └── orchestrator.py     # Workflow coordination
+│   │
+│   ├── services/
+│   │   ├── messaging.py        # Authorised message delivery
+│   │   ├── approvals.py        # Human approval workflow
+│   │   └── audit.py             # Action and event logging
+│   │
+│   └── schemas/
+│       ├── invoice.py
+│       └── payment.py
+│
+├── skills/
+│   ├── invoice-ingestion/
+│   │   └── SKILL.md
+│   ├── payment-monitoring/
+│   │   └── SKILL.md
+│   ├── decision-routing/
+│   │   └── SKILL.md
+│   ├── customer-reply-understanding/
+│   │   └── SKILL.md
+│   ├── collection-policy/
+│   │   └── SKILL.md
+│   ├── payment-reconciliation/
+│   │   └── SKILL.md
+│   └── audit-and-recovery/
+│       └── SKILL.md
+│
+├── tests/
+│   ├── test_utils.py
+│   ├── test_ingestion.py
+│   ├── test_decision_router.py
+│   ├── test_follow_up.py
+│   └── test_reconciliation.py
+│
+├── submission/
+│   ├── SDC2026_TeamName_Preliminary.pdf
+│   ├── SDC2026_TeamName_TechDeclaration.pdf
+│   ├── SDC2026_TeamName_Replit_POU.pdf
+│   └── SDC2026_TeamName_Runpod_POU.pdf
+│
+├── .env.example
+├── .gitignore
+├── .replit
+├── LICENSE
+├── requirements.txt
 └── README.md
 ```
 
 ### Architecture
 
 ```
-User ──► Replit (Flask app / API) ──► RunPod Endpoint (GPU: OCR + inference)
-                │
-                ├──► Deterministic engines (aging, ledger, approval gate)
-                │
-                └──► Response returned to user
+             User
+               │
+               ▼
+      Orbyte Web Dashboard
+               │
+               ▼
+      Backend / API (Render)
+               │
+       ┌───────┴────────┐
+       ▼                ▼
+  AI Services        PostgreSQL
+  ├─ Laya            Invoice & Payment
+  └─ DeepSeek API    Records
+       │                │
+       └───────┬────────┘
+               ▼
+     Workflow Orchestrator
+          (LangGraph)
+               │
+               ▼
+    Human Approval if Needed
+               │
+               ▼
+    Follow-up & Status Update
 ```
-
-The RunPod endpoint is optional infrastructure, not a dependency of correctness. With no endpoint configured, the app runs entirely on its local deterministic engines.
 
 ---
 
 ## How to Run
 
-### Option 1 — Run on Replit (Recommended)
+## Option 1 — Run on Replit (Recommended)
+1. Open the Replit Project, or import this repository via Create Repl → Import from GitHub:
+text:
+https://github.com/AlyssaWoe/UMvengers-Orbyte.git
 
-1. In Replit, choose **Create Repl → Import from GitHub** and select `AlyssaWoe/UMvengers-Orbyte`.
-2. Open the **Secrets** tab (🔒) and add:
-   - `RUNPOD_ENDPOINT_URL`
-   - `RUNPOD_API_KEY`
-   - `RUNPOD_MODEL` *(optional)*
-3. Click **Run**.
+2. Open the Secrets tab (🔒) and add the variables listed in .env.example:
+ · RUNPOD_API_KEY (your DeepSeek API key, or a RunPod key)
+ · RUNPOD_ENDPOINT_URL (https://api.deepseek.com/chat/completions or your RunPod endpoint URL)
+ · RUNPOD_MODEL (deepseek-flash)
 
-> **Note on the run command.** This repository does not yet contain a `.replit` file, so on import Replit will not know how to start a Flask app. Set the run command to:
->
-> ```bash
-> gunicorn backend.app:app --bind 0.0.0.0:8000
-> ```
->
-> The committed `frontend/park/build/` bundle means no `npm install` or build step is required.
+3. Click Run. Replit will run:
+bash
+python run.py
 
-### Option 2 — Run Locally
-
-```bash
+## Option 2 — Run Locally
+bash
 # 1. Clone the repository
 git clone https://github.com/AlyssaWoe/UMvengers-Orbyte.git
 cd UMvengers-Orbyte
-
 # 2. Create and activate a virtual environment
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-
+source venv/bin/activate
+# Windows (PowerShell / Command Prompt):
+# venv\Scripts\activate
 # 3. Install dependencies
 pip install -r requirements.txt
-
-# 4. Configure environment variables (optional — the app runs without them)
-#    RUNPOD_ENDPOINT_URL, RUNPOD_API_KEY, RUNPOD_MODEL
-
+# 4. Configure environment variables
+cp .env.example .env
+# Windows: copy .env.example .env
+# Fill in your RUNPOD_API_KEY and RUNPOD_ENDPOINT_URL inside .env
 # 5. Run the app
 python run.py
-```
+# Or directly via module:
+python -m backend.app
 
-The app serves at `http://localhost:8000` and serves the prebuilt React frontend from `frontend/park/build/`.
-
-### Run Tests
-
-The verification suites are self-checking scripts, not `unittest` cases. They stub their own transport, so they need no GPU, no RunPod account and no network:
-
-```bash
-python tools/runpod_selftest.py          # worker handler: dispatch, guards, response envelope
-python tools/runpod_client_selftest.py   # client: protocol, failover, secret safety
-```
-
-To verify the whole bridge through the running app:
-
-```bash
-curl -s http://localhost:8000/api/ai/runpod/selftest | python -m json.tool
-```
-
+Run Tests & Validation
+bash
+# Run backend and RunPod handler selftests
+python tools/runpod_selftest.py
+# Health & status check against running server (http://localhost:8000)
+curl http://localhost:8000/api/status
+curl http://localhost:8000/api/config/runpod
 ---
 
 ## How We Use Replit *(Required)*
@@ -212,27 +256,23 @@ curl -X POST https://api.runpod.ai/v2/$RUNPOD_ENDPOINT_ID/runsync \
 
 ## Challenges & Learnings
 
-- **A model must not hold the control.** The injection screen, the date-conflict shield and the approval gate are deterministic code. The model receives already-screened text, and where it disagrees with a computed fact the fact stands and the disagreement is recorded. Sending flagged input to a model for a "second opinion" would be the opposite of containment.
-- **Failures that look like successes are the expensive ones.** An endpoint can return `IN_QUEUE`, or a `FAILED` status that still carries an `output` field, or `available: false`. Treating any of those as a result would have silently poisoned the deterministic fallback. Each is now handled explicitly and asserted in tests.
-- **Cold starts are a design constraint, not an error.** A 14B model takes minutes to load, which is longer than a synchronous call will wait. The fallback to asynchronous submit-and-poll is what makes a cold worker usable rather than a hard failure.
-- **Verification beat optimism.** The previous version of the bridge posted to a route RunPod does not serve, and nothing called it. Stubbing the transport and asserting the protocol caught it without a GPU, an account or a network.
+- **Challenges Faced:** Designing a multi-agent AI workflow was challenging because each agent needed to handle different tasks while keeping the overall process reliable and efficient. We addressed this by dividing Orbyte into smaller components for invoice validation, payment monitoring, customer reply understanding, and follow-up decisions. We also recognised the importance of human approval for uncertain or sensitive cases.
+
+- **What We Learned:** Our team learned how AI APIs, database architecture, workflow orchestration, and cloud deployment can work together to solve real business problems. We also learned that successful AI solutions require more than automation: data accuracy, clear workflows, cost control, and human oversight are essential for building a practical and trustworthy product for SMEs.
 
 ## Future Improvements
 
-- [ ] Create the RunPod serverless endpoint and record its URL
-- [ ] Add a `.replit` file so a GitHub import starts the app without manual configuration
-- [ ] Add `.env.example` documenting the required variables
-- [ ] Add a `LICENSE` file
-- [ ] Complete the `submission/` documents
-- [ ] Consider a smaller distilled model to cut cold-start time
+- **Improved AI Accuracy and Automation** — Enhance Orbyte's AI agents to better understand customer replies, recommend suitable follow-up actions, and automate payment reconciliation while maintaining human oversight for sensitive cases.
+- **Real-World Integrations and Scalability** — Integrate email, WhatsApp, and accounting or banking systems to enable smoother payment follow-ups, real-time status updates, and support for more SMEs at an affordable cost.
 
 ## Team
 
-| Name        | Role                | GitHub                                   |
-| ----------- | ------------------- | ---------------------------------------- |
-| _TODO_      | Team Lead / Backend | _TODO_                                   |
-| _TODO_      | Frontend            | _TODO_                                   |
-| _TODO_      | AI / RunPod         | _TODO_                                   |
+| Name          | Role                                | GitHub |
+| ------------- | ----------------------------------- | ------ |
+| Wong Hanz     | Team Lead / Backend                 | _TODO_ |
+| Yeap Yi Theng | Frontend                            | _TODO_ |
+| Woe Xin Yi    | AI / RunPod                         | _TODO_ |
+| Leow Yi Han   | Database / Integration & Deployment |        |
 
 ---
 
@@ -252,5 +292,3 @@ curl -X POST https://api.runpod.ai/v2/$RUNPOD_ENDPOINT_ID/runsync \
 ## License
 
 This project is licensed under the [Apache License 2.0](LICENSE).
-
-> _TODO: the `LICENSE` file is not present in the repository yet._
